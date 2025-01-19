@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}GymFlow - Alunos{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Fundo e efeitos */
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+
+    .particles-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+    }
+
+    /* Cards com efeito vidro */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Cabeçalho e títulos */
+    .text-gradient {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+
+    /* Tabela de alunos */
+    .table {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+    }
+
+    .table th {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+    }
+
+    .table td {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Botões e ações */
+    .btn-primary {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+        border: none;
+        transition: transform 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(45deg, #45B7AF, #3CA69F);
+    }
+
+    /* Filtros */
+    .filtros {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #4ECDC4;
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(78, 205, 196, 0.25);
+    }
+
+    /* Modal */
+    .modal-content {
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .badge-ativo {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+
+    .badge-inativo {
+        background: rgba(255, 107, 107, 0.2);
+        color: #FF6B6B;
+    }
+
+    /* Foto do aluno */
+    .foto-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(78, 205, 196, 0.5);
+        margin-bottom: 15px;
+    }
+
+    .foto-upload {
+        display: none;
+    }
+
+    .btn-foto {
+        width: 150px;
+        margin-bottom: 20px;
+    }
+
+    /* Plano */
+    .plano-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.9em;
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+
+    /* Vencimento */
+    .vencimento-proximo {
+        color: #FF9F1C;
+    }
+
+    .vencimento-atrasado {
+        color: #FF6B6B;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-gradient">
+            <i class="fas fa-users me-2"></i>Gestão de Alunos
+        </h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAluno">
+            <i class="fas fa-plus me-2"></i>Novo Aluno
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="glass-card filtros">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <input type="text" class="form-control" placeholder="Buscar por nome..." id="filtroNome">
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroPlano">
+                    <option value="">Todos os Planos</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroStatus">
+                    <option value="">Todos os Status</option>
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroVencimento">
+                    <option value="">Todos os Vencimentos</option>
+                    <option value="proximo">Próximo do Vencimento</option>
+                    <option value="atrasado">Atrasado</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Alunos -->
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nome</th>
+                        <th>Plano</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaAlunos">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Aluno -->
+<div class="modal fade" id="modalAluno" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-gradient">Novo Aluno</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAluno">
+                    <div class="row">
+                        <div class="col-12 text-center mb-4">
+                            <img src="/static/img/default-user.png" alt="Foto do aluno" class="foto-preview" id="fotoPreview">
+                            <input type="file" name="foto" class="foto-upload" id="fotoUpload" accept="image/*">
+                            <br>
+                            <button type="button" class="btn btn-primary btn-foto" onclick="document.getElementById('fotoUpload').click()">
+                                <i class="fas fa-camera me-2"></i>Alterar Foto
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" name="nome" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CPF</label>
+                            <input type="text" class="form-control" name="cpf" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="telefone" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data de Nascimento</label>
+                            <input type="date" class="form-control" name="data_nascimento" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Plano</label>
+                            <select class="form-select" name="plano" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" class="form-control" name="endereco" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Altura (m)</label>
+                            <input type="number" class="form-control" name="altura" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Peso (kg)</label>
+                            <input type="number" class="form-control" name="peso" step="0.1" min="0" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Objetivo</label>
+                            <textarea class="form-control" name="objetivo" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" required>
+                                <option value="ativo">Ativo</option>
+                                <option value="inativo">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarAluno">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.5/dist/inputmask.min.js"></script>
+<script>
+    // Configuração do particles.js
+    particlesJS('particles-js', {
+        particles: {
+            number: {
+                value: 80,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: '#4ECDC4'
+            },
+            shape: {
+                type: 'circle'
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: '#4ECDC4',
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: 'none',
+                random: false,
+                straight: false,
+                out_mode: 'out',
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: 'canvas',
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: 'repulse'
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+
+    // Funções para gerenciamento de alunos
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarAlunos();
+        carregarPlanos();
+        
+        // Event listeners para filtros
+        document.getElementById('filtroNome').addEventListener('input', filtrarAlunos);
+        document.getElementById('filtroPlano').addEventListener('change', filtrarAlunos);
+        document.getElementById('filtroStatus').addEventListener('change', filtrarAlunos);
+        document.getElementById('filtroVencimento').addEventListener('change', filtrarAlunos);
+
+        // Event listener para salvar aluno
+        document.getElementById('btnSalvarAluno').addEventListener('click', salvarAluno);
+
+        // Event listener para preview da foto
+        document.getElementById('fotoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('fotoPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Máscaras para inputs
+        Inputmask("999.999.999-99").mask(document.querySelector('[name="cpf"]'));
+        Inputmask("(99) 99999-9999").mask(document.querySelector('[name="telefone"]'));
+    });
+
+    function carregarAlunos() {
+        fetch('/api/alunos')
+            .then(response => response.json())
+            .then(alunos => {
+                const tbody = document.getElementById('listaAlunos');
+                tbody.innerHTML = '';
+                
+                alunos.forEach(aluno => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <img src="${aluno.foto_url || '/static/img/default-user.png'}" 
+                                 alt="Foto de ${aluno.nome}" 
+                                 class="rounded-circle" 
+                                 width="40" height="40">
+                        </td>
+                        <td>${aluno.nome}</td>
+                        <td>
+                            <span class="plano-badge">
+                                ${aluno.plano.nome}
+                            </span>
+                        </td>
+                        <td class="${getVencimentoClass(aluno.data_vencimento)}">
+                            ${formatarData(aluno.data_vencimento)}
+                        </td>
+                        <td>
+                            <span class="badge badge-${aluno.status}">
+                                ${aluno.status.charAt(0).toUpperCase() + aluno.status.slice(1)}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editarAluno(${aluno.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info me-1" onclick="verTreinos(${aluno.id})">
+                                <i class="fas fa-dumbbell"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning me-1" onclick="verPagamentos(${aluno.id})">
+                                <i class="fas fa-dollar-sign"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="inativarAluno(${aluno.id})">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar alunos:', error));
+    }
+
+    function carregarPlanos() {
+        fetch('/api/planos')
+            .then(response => response.json())
+            .then(planos => {
+                const selectModal = document.querySelector('select[name="plano"]');
+                const selectFiltro = document.getElementById('filtroPlano');
+                
+                planos.forEach(plano => {
+                    const optionModal = document.createElement('option');
+                    optionModal.value = plano.id;
+                    optionModal.textContent = `${plano.nome} - R$ ${plano.valor.toFixed(2)}`;
+                    selectModal.appendChild(optionModal);
+
+                    const optionFiltro = document.createElement('option');
+                    optionFiltro.value = plano.id;
+                    optionFiltro.textContent = plano.nome;
+                    selectFiltro.appendChild(optionFiltro);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar planos:', error));
+    }
+
+    function salvarAluno() {
+        const form = document.getElementById('formAluno');
+        const formData = new FormData(form);
+
+        fetch('/api/alunos', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.erro) {
+                alert(data.erro);
+            } else {
+                alert('Aluno salvo com sucesso!');
+                $('#modalAluno').modal('hide');
+                carregarAlunos();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao salvar aluno:', error);
+            alert('Erro ao salvar aluno');
+        });
+    }
+
+    function editarAluno(id) {
+        fetch(`/api/alunos/${id}`)
+            .then(response => response.json())
+            .then(aluno => {
+                const form = document.getElementById('formAluno');
+                
+                // Preenche os campos do formulário
+                form.querySelector('[name="nome"]').value = aluno.nome;
+                form.querySelector('[name="email"]').value = aluno.email;
+                form.querySelector('[name="cpf"]').value = aluno.cpf;
+                form.querySelector('[name="telefone"]').value = aluno.telefone;
+                form.querySelector('[name="data_nascimento"]').value = aluno.data_nascimento;
+                form.querySelector('[name="plano"]').value = aluno.plano_id;
+                form.querySelector('[name="endereco"]').value = aluno.endereco;
+                form.querySelector('[name="altura"]').value = aluno.altura;
+                form.querySelector('[name="peso"]').value = aluno.peso;
+                form.querySelector('[name="objetivo"]').value = aluno.objetivo;
+                form.querySelector('[name="status"]').value = aluno.status;
+
+                // Atualiza a foto
+                document.getElementById('fotoPreview').src = aluno.foto_url || '/static/img/default-user.png';
+
+                $('#modalAluno').modal('show');
+            })
+            .catch(error => console.error('Erro ao carregar aluno:', error));
+    }
+
+    function verTreinos(id) {
+        window.location.href = `/treinos?aluno=${id}`;
+    }
+
+    function verPagamentos(id) {
+        window.location.href = `/pagamentos?aluno=${id}`;
+    }
+
+    function inativarAluno(id) {
+        if (confirm('Tem certeza que deseja inativar este aluno?')) {
+            fetch(`/api/alunos/${id}/inativar`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensagem);
+                carregarAlunos();
+            })
+            .catch(error => console.error('Erro ao inativar aluno:', error));
+        }
+    }
+
+    function filtrarAlunos() {
+        const nome = document.getElementById('filtroNome').value.toLowerCase();
+        const plano = document.getElementById('filtroPlano').value;
+        const status = document.getElementById('filtroStatus').value;
+        const vencimento = document.getElementById('filtroVencimento').value;
+
+        const rows = document.getElementById('listaAlunos').getElementsByTagName('tr');
+        
+        Array.from(rows).forEach(row => {
+            let mostrar = true;
+            
+            if (nome && !row.cells[1].textContent.toLowerCase().includes(nome)) {
+                mostrar = false;
+            }
+            
+            if (plano && !row.cells[2].textContent.includes(plano)) {
+                mostrar = false;
+            }
+            
+            if (status && !row.cells[4].textContent.toLowerCase().includes(status)) {
+                mostrar = false;
+            }
+            
+            if (vencimento) {
+                const vencimentoCell = row.cells[3];
+                if (vencimento === 'proximo' && !vencimentoCell.classList.contains('vencimento-proximo')) {
+                    mostrar = false;
+                }
+                if (vencimento === 'atrasado' && !vencimentoCell.classList.contains('vencimento-atrasado')) {
+                    mostrar = false;
+                }
+            }
+            
+            row.style.display = mostrar ? '' : 'none';
+        });
+    }
+
+    function getVencimentoClass(data) {
+        const hoje = new Date();
+        const vencimento = new Date(data);
+        const diasAteVencimento = Math.floor((vencimento - hoje) / (1000 * 60 * 60 * 24));
+        
+        if (diasAteVencimento < 0) {
+            return 'vencimento-atrasado';
+        } else if (diasAteVencimento <= 7) {
+            return 'vencimento-proximo';
+        }
+        return '';
+    }
+
+    function formatarData(data) {
+        if (!data) return '-';
+        return new Date(data).toLocaleDateString('pt-BR');
+    }
+</script>
+{% endblock %} 

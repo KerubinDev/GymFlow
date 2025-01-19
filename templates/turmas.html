@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}GymFlow - Turmas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Fundo e efeitos */
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+
+    .particles-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+    }
+
+    /* Cards com efeito vidro */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Cabeçalho e títulos */
+    .text-gradient {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+
+    /* Tabela de turmas */
+    .table {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+    }
+
+    .table th {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+    }
+
+    .table td {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Botões e ações */
+    .btn-primary {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+        border: none;
+        transition: transform 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(45deg, #45B7AF, #3CA69F);
+    }
+
+    /* Filtros */
+    .filtros {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #4ECDC4;
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(78, 205, 196, 0.25);
+    }
+
+    /* Modal */
+    .modal-content {
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .badge-ativa {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+
+    .badge-inativa {
+        background: rgba(255, 107, 107, 0.2);
+        color: #FF6B6B;
+    }
+
+    /* Horários */
+    .horario-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .horario-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-remover-horario {
+        color: #FF6B6B;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-left: 10px;
+    }
+
+    .btn-remover-horario:hover {
+        color: #ff4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-gradient">
+            <i class="fas fa-clock me-2"></i>Horários e Turmas
+        </h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTurma">
+            <i class="fas fa-plus me-2"></i>Nova Turma
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="glass-card filtros">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroModalidade">
+                    <option value="">Todas as Modalidades</option>
+                    <option value="musculacao">Musculação</option>
+                    <option value="crossfit">CrossFit</option>
+                    <option value="pilates">Pilates</option>
+                    <option value="yoga">Yoga</option>
+                    <option value="spinning">Spinning</option>
+                    <option value="danca">Dança</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroProfessor">
+                    <option value="">Todos os Professores</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroPeriodo">
+                    <option value="">Todos os Períodos</option>
+                    <option value="manha">Manhã</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="noite">Noite</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroStatus">
+                    <option value="">Todos os Status</option>
+                    <option value="ativa">Ativa</option>
+                    <option value="inativa">Inativa</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Turmas -->
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Modalidade</th>
+                        <th>Professor</th>
+                        <th>Horários</th>
+                        <th>Capacidade</th>
+                        <th>Alunos</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaTurmas">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Turma -->
+<div class="modal fade" id="modalTurma" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-gradient">Nova Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formTurma">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Modalidade</label>
+                            <select class="form-select" name="modalidade" required>
+                                <option value="">Selecione...</option>
+                                <option value="musculacao">Musculação</option>
+                                <option value="crossfit">CrossFit</option>
+                                <option value="pilates">Pilates</option>
+                                <option value="yoga">Yoga</option>
+                                <option value="spinning">Spinning</option>
+                                <option value="danca">Dança</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Professor</label>
+                            <select class="form-select" name="professor" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Capacidade</label>
+                            <input type="number" class="form-control" name="capacidade" min="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" required>
+                                <option value="ativa">Ativa</option>
+                                <option value="inativa">Inativa</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Horários</label>
+                            <div id="horariosContainer">
+                                <!-- Template para horários -->
+                                <div class="horario-item d-flex align-items-center">
+                                    <select class="form-select me-2" name="dia[]" required>
+                                        <option value="">Dia da Semana</option>
+                                        <option value="segunda">Segunda-feira</option>
+                                        <option value="terca">Terça-feira</option>
+                                        <option value="quarta">Quarta-feira</option>
+                                        <option value="quinta">Quinta-feira</option>
+                                        <option value="sexta">Sexta-feira</option>
+                                        <option value="sabado">Sábado</option>
+                                        <option value="domingo">Domingo</option>
+                                    </select>
+                                    <input type="time" class="form-control me-2" name="horario_inicio[]" required>
+                                    <input type="time" class="form-control" name="horario_fim[]" required>
+                                    <button type="button" class="btn-remover-horario">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary mt-2" id="btnAdicionarHorario">
+                                <i class="fas fa-plus me-2"></i>Adicionar Horário
+                            </button>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarTurma">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+    // Configuração do particles.js
+    particlesJS('particles-js', {
+        particles: {
+            number: {
+                value: 80,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: '#4ECDC4'
+            },
+            shape: {
+                type: 'circle'
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: '#4ECDC4',
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: 'none',
+                random: false,
+                straight: false,
+                out_mode: 'out',
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: 'canvas',
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: 'repulse'
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+
+    // Funções para gerenciamento de turmas
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarTurmas();
+        carregarProfessores();
+        
+        // Event listeners para filtros
+        document.getElementById('filtroModalidade').addEventListener('change', filtrarTurmas);
+        document.getElementById('filtroProfessor').addEventListener('change', filtrarTurmas);
+        document.getElementById('filtroPeriodo').addEventListener('change', filtrarTurmas);
+        document.getElementById('filtroStatus').addEventListener('change', filtrarTurmas);
+
+        // Event listener para salvar turma
+        document.getElementById('btnSalvarTurma').addEventListener('click', salvarTurma);
+
+        // Event listener para adicionar horário
+        document.getElementById('btnAdicionarHorario').addEventListener('click', adicionarHorario);
+
+        // Event listener para remover horário
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-remover-horario')) {
+                const horarioItem = e.target.closest('.horario-item');
+                if (document.querySelectorAll('.horario-item').length > 1) {
+                    horarioItem.remove();
+                }
+            }
+        });
+    });
+
+    function carregarTurmas() {
+        fetch('/api/turmas')
+            .then(response => response.json())
+            .then(turmas => {
+                const tbody = document.getElementById('listaTurmas');
+                tbody.innerHTML = '';
+                
+                turmas.forEach(turma => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${formatarModalidade(turma.modalidade)}</td>
+                        <td>${turma.professor.nome}</td>
+                        <td>${formatarHorarios(turma.horarios)}</td>
+                        <td>${turma.alunos_matriculados}/${turma.capacidade}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="verAlunos(${turma.id})">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <span class="badge badge-${turma.status}">
+                                ${turma.status.charAt(0).toUpperCase() + turma.status.slice(1)}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editarTurma(${turma.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="excluirTurma(${turma.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar turmas:', error));
+    }
+
+    function carregarProfessores() {
+        fetch('/api/professores')
+            .then(response => response.json())
+            .then(professores => {
+                const selectModal = document.querySelector('select[name="professor"]');
+                const selectFiltro = document.getElementById('filtroProfessor');
+                
+                professores.forEach(professor => {
+                    const optionModal = document.createElement('option');
+                    optionModal.value = professor.id;
+                    optionModal.textContent = professor.nome;
+                    selectModal.appendChild(optionModal);
+
+                    const optionFiltro = document.createElement('option');
+                    optionFiltro.value = professor.id;
+                    optionFiltro.textContent = professor.nome;
+                    selectFiltro.appendChild(optionFiltro);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar professores:', error));
+    }
+
+    function adicionarHorario() {
+        const container = document.getElementById('horariosContainer');
+        const template = container.querySelector('.horario-item').cloneNode(true);
+        
+        // Limpa os valores
+        template.querySelectorAll('select, input').forEach(input => {
+            input.value = '';
+        });
+        
+        container.appendChild(template);
+    }
+
+    function salvarTurma() {
+        const form = document.getElementById('formTurma');
+        const formData = new FormData(form);
+
+        fetch('/api/turmas', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.erro) {
+                alert(data.erro);
+            } else {
+                alert('Turma salva com sucesso!');
+                $('#modalTurma').modal('hide');
+                carregarTurmas();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao salvar turma:', error);
+            alert('Erro ao salvar turma');
+        });
+    }
+
+    function editarTurma(id) {
+        fetch(`/api/turmas/${id}`)
+            .then(response => response.json())
+            .then(turma => {
+                const form = document.getElementById('formTurma');
+                
+                // Preenche os campos do formulário
+                form.querySelector('[name="modalidade"]').value = turma.modalidade;
+                form.querySelector('[name="professor"]').value = turma.professor_id;
+                form.querySelector('[name="capacidade"]').value = turma.capacidade;
+                form.querySelector('[name="status"]').value = turma.status;
+                form.querySelector('[name="observacoes"]').value = turma.observacoes;
+
+                // Limpa os horários existentes
+                const horariosContainer = document.getElementById('horariosContainer');
+                horariosContainer.innerHTML = '';
+
+                // Adiciona os horários da turma
+                turma.horarios.forEach(horario => {
+                    const horarioItem = document.createElement('div');
+                    horarioItem.className = 'horario-item d-flex align-items-center';
+                    horarioItem.innerHTML = `
+                        <select class="form-select me-2" name="dia[]" required>
+                            <option value="">Dia da Semana</option>
+                            <option value="segunda">Segunda-feira</option>
+                            <option value="terca">Terça-feira</option>
+                            <option value="quarta">Quarta-feira</option>
+                            <option value="quinta">Quinta-feira</option>
+                            <option value="sexta">Sexta-feira</option>
+                            <option value="sabado">Sábado</option>
+                            <option value="domingo">Domingo</option>
+                        </select>
+                        <input type="time" class="form-control me-2" name="horario_inicio[]" required>
+                        <input type="time" class="form-control" name="horario_fim[]" required>
+                        <button type="button" class="btn-remover-horario">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    horariosContainer.appendChild(horarioItem);
+
+                    // Preenche os valores do horário
+                    const selects = horarioItem.getElementsByTagName('select');
+                    const inputs = horarioItem.getElementsByTagName('input');
+                    selects[0].value = horario.dia;
+                    inputs[0].value = horario.horario_inicio;
+                    inputs[1].value = horario.horario_fim;
+                });
+
+                $('#modalTurma').modal('show');
+            })
+            .catch(error => console.error('Erro ao carregar turma:', error));
+    }
+
+    function excluirTurma(id) {
+        if (confirm('Tem certeza que deseja excluir esta turma?')) {
+            fetch(`/api/turmas/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensagem);
+                carregarTurmas();
+            })
+            .catch(error => console.error('Erro ao excluir turma:', error));
+        }
+    }
+
+    function verAlunos(turmaId) {
+        // Implementar visualização de alunos matriculados
+        alert('Funcionalidade em desenvolvimento');
+    }
+
+    function filtrarTurmas() {
+        const modalidade = document.getElementById('filtroModalidade').value.toLowerCase();
+        const professor = document.getElementById('filtroProfessor').value;
+        const periodo = document.getElementById('filtroPeriodo').value;
+        const status = document.getElementById('filtroStatus').value;
+
+        const rows = document.getElementById('listaTurmas').getElementsByTagName('tr');
+        
+        Array.from(rows).forEach(row => {
+            let mostrar = true;
+            
+            if (modalidade && !row.cells[0].textContent.toLowerCase().includes(modalidade)) {
+                mostrar = false;
+            }
+            
+            if (professor && !row.cells[1].textContent.includes(professor)) {
+                mostrar = false;
+            }
+            
+            if (periodo) {
+                const horarios = row.cells[2].textContent;
+                const hora = parseInt(horarios.split(':')[0]);
+                
+                if (periodo === 'manha' && (hora < 6 || hora >= 12)) {
+                    mostrar = false;
+                } else if (periodo === 'tarde' && (hora < 12 || hora >= 18)) {
+                    mostrar = false;
+                } else if (periodo === 'noite' && (hora < 18 || hora >= 23)) {
+                    mostrar = false;
+                }
+            }
+            
+            if (status && !row.cells[5].textContent.toLowerCase().includes(status)) {
+                mostrar = false;
+            }
+            
+            row.style.display = mostrar ? '' : 'none';
+        });
+    }
+
+    function formatarModalidade(modalidade) {
+        const modalidades = {
+            'musculacao': 'Musculação',
+            'crossfit': 'CrossFit',
+            'pilates': 'Pilates',
+            'yoga': 'Yoga',
+            'spinning': 'Spinning',
+            'danca': 'Dança'
+        };
+        return modalidades[modalidade] || modalidade;
+    }
+
+    function formatarHorarios(horarios) {
+        return horarios.map(h => 
+            `${h.dia.charAt(0).toUpperCase() + h.dia.slice(1)} ${h.horario_inicio}-${h.horario_fim}`
+        ).join('<br>');
+    }
+</script>
+{% endblock %} 

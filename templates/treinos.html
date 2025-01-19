@@ -1,433 +1,656 @@
 {% extends "base.html" %}
 
-{% block title %}Treinos - GymFlow{% endblock %}
+{% block title %}GymFlow - Treinos{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    .card {
+    /* Fundo e efeitos */
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+
+    .particles-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+    }
+
+    /* Cards com efeito vidro */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Cabeçalho e títulos */
+    .text-gradient {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    }
+
+    /* Tabela de treinos */
+    .table {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+    }
+
+    .table th {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+    }
+
+    .table td {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Botões e ações */
+    .btn-primary {
+        background: linear-gradient(45deg, #4ECDC4, #45B7AF);
         border: none;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(45deg, #45B7AF, #3CA69F);
+    }
+
+    /* Filtros */
+    .filtros {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 15px;
         margin-bottom: 20px;
     }
-    
-    .card-header {
-        background-color: transparent;
-        border-bottom: none;
-        padding: 20px;
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
     }
-    
-    .card-body {
-        padding: 20px;
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #4ECDC4;
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(78, 205, 196, 0.25);
     }
-    
-    .treino-item {
-        border-left: 4px solid #0d6efd;
-        padding: 15px;
-        margin-bottom: 15px;
-        background-color: #f8f9fa;
-        border-radius: 0 5px 5px 0;
+
+    /* Modal */
+    .modal-content {
+        background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
-    .treino-item:hover {
-        background-color: #e9ecef;
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .badge-ativo {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+
+    .badge-inativo {
+        background: rgba(255, 107, 107, 0.2);
+        color: #FF6B6B;
+    }
+
+    /* Exercícios */
     .exercicio-item {
-        padding: 10px;
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .exercicio-item:last-child {
-        border-bottom: none;
-    }
-    
-    .btn-acao {
-        padding: 5px 10px;
-        font-size: 0.875rem;
-    }
-    
-    .filtro-container {
-        background-color: #f8f9fa;
-        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 10px;
-        margin-bottom: 20px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .exercicio-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-remover-exercicio {
+        color: #FF6B6B;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-left: 10px;
+    }
+
+    .btn-remover-exercicio:hover {
+        color: #ff4444;
+    }
+
+    /* Tipo de treino */
+    .tipo-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.9em;
+    }
+
+    .tipo-musculacao {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ECDC4;
+    }
+
+    .tipo-cardio {
+        background: rgba(255, 159, 28, 0.2);
+        color: #FF9F1C;
+    }
+
+    .tipo-funcional {
+        background: rgba(147, 112, 219, 0.2);
+        color: #9370DB;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid mt-4">
+    <!-- Fundo animado com partículas -->
+    <div id="particles-js" class="particles-background"></div>
+
+    <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gerenciamento de Treinos</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoTreino">
-            <i class="bi bi-plus-lg"></i> Novo Treino
+        <h2 class="text-gradient">
+            <i class="fas fa-dumbbell me-2"></i>Gestão de Treinos
+        </h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTreino">
+            <i class="fas fa-plus me-2"></i>Novo Treino
         </button>
     </div>
-    
+
     <!-- Filtros -->
-    <div class="filtro-container">
+    <div class="glass-card filtros">
         <div class="row">
-            <div class="col-md-3">
-                <label for="filtroAluno" class="form-label">Aluno</label>
-                <input type="text" class="form-control" id="filtroAluno" 
-                       placeholder="Nome do aluno">
+            <div class="col-md-3 mb-3">
+                <select class="form-select" id="filtroAluno">
+                    <option value="">Todos os Alunos</option>
+                </select>
             </div>
-            <div class="col-md-3">
-                <label for="filtroTipo" class="form-label">Tipo de Treino</label>
+            <div class="col-md-3 mb-3">
                 <select class="form-select" id="filtroTipo">
-                    <option value="">Todos</option>
+                    <option value="">Todos os Tipos</option>
                     <option value="musculacao">Musculação</option>
                     <option value="cardio">Cardio</option>
                     <option value="funcional">Funcional</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label for="filtroProfessor" class="form-label">Professor</label>
+            <div class="col-md-3 mb-3">
                 <select class="form-select" id="filtroProfessor">
-                    <option value="">Todos</option>
+                    <option value="">Todos os Professores</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label for="filtroStatus" class="form-label">Status</label>
+            <div class="col-md-3 mb-3">
                 <select class="form-select" id="filtroStatus">
-                    <option value="">Todos</option>
+                    <option value="">Todos os Status</option>
                     <option value="ativo">Ativo</option>
                     <option value="inativo">Inativo</option>
                 </select>
             </div>
         </div>
     </div>
-    
+
     <!-- Lista de Treinos -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div id="listaTreinos">
-                        <!-- Preenchido via JavaScript -->
-                    </div>
-                </div>
-            </div>
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Tipo</th>
+                        <th>Professor</th>
+                        <th>Data Início</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaTreinos">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Modal Novo Treino -->
-<div class="modal fade" id="modalNovoTreino" tabindex="-1">
+<!-- Modal de Treino -->
+<div class="modal fade" id="modalTreino" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Treino</h5>
+                <h5 class="modal-title text-gradient">Novo Treino</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formNovoTreino">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="alunoTreino" class="form-label">Aluno</label>
-                            <select class="form-select" id="alunoTreino" required>
-                                <option value="">Selecione um aluno</option>
+                <form id="formTreino">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aluno</label>
+                            <select class="form-select" name="aluno" required>
+                                <option value="">Selecione...</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="tipoTreino" class="form-label">Tipo de Treino</label>
-                            <select class="form-select" id="tipoTreino" required>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="tipo" required>
+                                <option value="">Selecione...</option>
                                 <option value="musculacao">Musculação</option>
                                 <option value="cardio">Cardio</option>
                                 <option value="funcional">Funcional</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div id="exercicios">
-                        <h6 class="mb-3">Exercícios</h6>
-                        <div class="exercicio-container">
-                            <!-- Exercícios serão adicionados aqui -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Professor</label>
+                            <select class="form-select" name="professor" required>
+                                <option value="">Selecione...</option>
+                            </select>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" 
-                                id="btnAdicionarExercicio">
-                            <i class="bi bi-plus-lg"></i> Adicionar Exercício
-                        </button>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <label for="observacoes" class="form-label">Observações</label>
-                        <textarea class="form-control" id="observacoes" rows="3"></textarea>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data de Início</label>
+                            <input type="date" class="form-control" name="data_inicio" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Exercícios</label>
+                            <div id="exerciciosContainer">
+                                <!-- Template para exercícios -->
+                                <div class="exercicio-item d-flex align-items-center">
+                                    <input type="text" class="form-control me-2" name="exercicio[]" placeholder="Nome do exercício" required>
+                                    <input type="text" class="form-control me-2" name="series[]" placeholder="Séries" required>
+                                    <input type="text" class="form-control me-2" name="repeticoes[]" placeholder="Repetições" required>
+                                    <input type="text" class="form-control me-2" name="carga[]" placeholder="Carga (kg)" required>
+                                    <button type="button" class="btn-remover-exercicio">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary mt-2" id="btnAdicionarExercicio">
+                                <i class="fas fa-plus me-2"></i>Adicionar Exercício
+                            </button>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" required>
+                                <option value="ativo">Ativo</option>
+                                <option value="inativo">Inativo</option>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnSalvarTreino">
-                    Salvar Treino
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarTreino">Salvar</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Template do Exercício -->
-<template id="templateExercicio">
-    <div class="exercicio-item">
-        <div class="row">
-            <div class="col-md-4">
-                <label class="form-label">Exercício</label>
-                <input type="text" class="form-control exercicio-nome" required>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Séries</label>
-                <input type="number" class="form-control exercicio-series" required>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Repetições</label>
-                <input type="number" class="form-control exercicio-repeticoes" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Carga (kg)</label>
-                <input type="number" class="form-control exercicio-carga" step="0.5">
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-danger btn-sm btn-remover-exercicio">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</template>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalNovoTreino = new bootstrap.Modal(
-            document.getElementById('modalNovoTreino')
-        );
-        const formNovoTreino = document.getElementById('formNovoTreino');
-        const btnAdicionarExercicio = document.getElementById('btnAdicionarExercicio');
-        const exerciciosContainer = document.querySelector('.exercicio-container');
-        const templateExercicio = document.getElementById('templateExercicio');
-        
-        // Carregar lista de alunos
-        async function carregarAlunos() {
-            try {
-                const response = await fetch('/alunos');
-                const alunos = await response.json();
-                
-                const selectAluno = document.getElementById('alunoTreino');
-                alunos.forEach(aluno => {
-                    const option = document.createElement('option');
-                    option.value = aluno.id;
-                    option.textContent = aluno.nome;
-                    selectAluno.appendChild(option);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar alunos:', erro);
-            }
-        }
-        
-        // Carregar lista de professores
-        async function carregarProfessores() {
-            try {
-                const response = await fetch('/professores');
-                const professores = await response.json();
-                
-                const selectProfessor = document.getElementById('filtroProfessor');
-                professores.forEach(professor => {
-                    const option = document.createElement('option');
-                    option.value = professor.id;
-                    option.textContent = professor.nome;
-                    selectProfessor.appendChild(option);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar professores:', erro);
-            }
-        }
-        
-        // Adicionar novo exercício
-        function adicionarExercicio() {
-            const clone = document.importNode(templateExercicio.content, true);
-            
-            // Configurar botão de remover
-            const btnRemover = clone.querySelector('.btn-remover-exercicio');
-            btnRemover.addEventListener('click', function(e) {
-                e.target.closest('.exercicio-item').remove();
-            });
-            
-            exerciciosContainer.appendChild(clone);
-        }
-        
-        // Salvar novo treino
-        async function salvarTreino() {
-            const exercicios = [];
-            document.querySelectorAll('.exercicio-item').forEach(item => {
-                exercicios.push({
-                    nome: item.querySelector('.exercicio-nome').value,
-                    series: parseInt(item.querySelector('.exercicio-series').value),
-                    repeticoes: parseInt(item.querySelector('.exercicio-repeticoes').value),
-                    carga: parseFloat(item.querySelector('.exercicio-carga').value || 0)
-                });
-            });
-            
-            const dados = {
-                aluno_id: document.getElementById('alunoTreino').value,
-                tipo: document.getElementById('tipoTreino').value,
-                exercicios: exercicios,
-                observacoes: document.getElementById('observacoes').value
-            };
-            
-            try {
-                const response = await fetch('/treinos', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
-                
-                if (response.ok) {
-                    alert('Treino salvo com sucesso!');
-                    modalNovoTreino.hide();
-                    carregarTreinos();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao salvar treino');
+    // Configuração do particles.js
+    particlesJS('particles-js', {
+        particles: {
+            number: {
+                value: 80,
+                density: {
+                    enable: true,
+                    value_area: 800
                 }
-            } catch (erro) {
-                console.error('Erro ao salvar treino:', erro);
-                alert('Erro ao salvar treino');
+            },
+            color: {
+                value: '#4ECDC4'
+            },
+            shape: {
+                type: 'circle'
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: '#4ECDC4',
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: 'none',
+                random: false,
+                straight: false,
+                out_mode: 'out',
+                bounce: false
             }
-        }
-        
-        // Carregar treinos
-        async function carregarTreinos() {
-            try {
-                const filtros = {
-                    aluno: document.getElementById('filtroAluno').value,
-                    tipo: document.getElementById('filtroTipo').value,
-                    professor: document.getElementById('filtroProfessor').value,
-                    status: document.getElementById('filtroStatus').value
-                };
-                
-                const queryString = new URLSearchParams(filtros).toString();
-                const response = await fetch(`/treinos?${queryString}`);
-                const treinos = await response.json();
-                
-                const listaTreinos = document.getElementById('listaTreinos');
-                listaTreinos.innerHTML = '';
-                
-                treinos.forEach(treino => {
-                    const div = document.createElement('div');
-                    div.className = 'treino-item';
-                    div.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="mb-1">${treino.aluno.nome}</h5>
-                                <p class="mb-1">
-                                    <span class="badge bg-primary">${treino.tipo}</span>
-                                    <small class="text-muted ms-2">
-                                        Criado em: ${new Date(treino.data_criacao).toLocaleDateString()}
-                                    </small>
-                                </p>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary btn-acao me-2"
-                                        onclick="editarTreino(${treino.id})">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao"
-                                        onclick="excluirTreino(${treino.id})">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <h6>Exercícios:</h6>
-                            <ul class="list-unstyled">
-                                ${treino.exercicios.map(ex => `
-                                    <li>
-                                        ${ex.nome} - ${ex.series}x${ex.repeticoes} 
-                                        ${ex.carga ? `(${ex.carga}kg)` : ''}
-                                    </li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                        ${treino.observacoes ? `
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <strong>Observações:</strong> ${treino.observacoes}
-                                </small>
-                            </div>
-                        ` : ''}
-                    `;
-                    listaTreinos.appendChild(div);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar treinos:', erro);
+        },
+        interactivity: {
+            detect_on: 'canvas',
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: 'repulse'
+                },
+                resize: true
             }
-        }
-        
-        // Event Listeners
-        btnAdicionarExercicio.addEventListener('click', adicionarExercicio);
-        
-        document.getElementById('btnSalvarTreino').addEventListener('click', salvarTreino);
-        
-        // Filtros
-        ['filtroAluno', 'filtroTipo', 'filtroProfessor', 'filtroStatus'].forEach(id => {
-            document.getElementById(id).addEventListener('change', carregarTreinos);
-        });
-        
-        document.getElementById('filtroAluno').addEventListener('input', 
-            debounce(carregarTreinos, 300)
-        );
-        
-        // Inicialização
+        },
+        retina_detect: true
+    });
+
+    // Funções para gerenciamento de treinos
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarTreinos();
         carregarAlunos();
         carregarProfessores();
-        carregarTreinos();
-        adicionarExercicio(); // Adiciona um exercício inicial
-    });
-    
-    // Função de debounce para evitar muitas requisições
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-    
-    // Funções globais para edição e exclusão
-    async function editarTreino(id) {
-        // Implementar edição de treino
-        console.log('Editar treino:', id);
-    }
-    
-    async function excluirTreino(id) {
-        if (confirm('Tem certeza que deseja excluir este treino?')) {
-            try {
-                const response = await fetch(`/treinos/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('Treino excluído com sucesso!');
-                    carregarTreinos();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao excluir treino');
+        
+        // Event listeners para filtros
+        document.getElementById('filtroAluno').addEventListener('change', filtrarTreinos);
+        document.getElementById('filtroTipo').addEventListener('change', filtrarTreinos);
+        document.getElementById('filtroProfessor').addEventListener('change', filtrarTreinos);
+        document.getElementById('filtroStatus').addEventListener('change', filtrarTreinos);
+
+        // Event listener para salvar treino
+        document.getElementById('btnSalvarTreino').addEventListener('click', salvarTreino);
+
+        // Event listener para adicionar exercício
+        document.getElementById('btnAdicionarExercicio').addEventListener('click', adicionarExercicio);
+
+        // Event listener para remover exercício
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-remover-exercicio')) {
+                const exercicioItem = e.target.closest('.exercicio-item');
+                if (document.querySelectorAll('.exercicio-item').length > 1) {
+                    exercicioItem.remove();
                 }
-            } catch (erro) {
-                console.error('Erro ao excluir treino:', erro);
-                alert('Erro ao excluir treino');
             }
+        });
+    });
+
+    function carregarTreinos() {
+        fetch('/api/treinos')
+            .then(response => response.json())
+            .then(treinos => {
+                const tbody = document.getElementById('listaTreinos');
+                tbody.innerHTML = '';
+                
+                treinos.forEach(treino => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${treino.aluno.nome}</td>
+                        <td>
+                            <span class="tipo-badge tipo-${treino.tipo}">
+                                ${formatarTipo(treino.tipo)}
+                            </span>
+                        </td>
+                        <td>${treino.professor.nome}</td>
+                        <td>${formatarData(treino.data_inicio)}</td>
+                        <td>
+                            <span class="badge badge-${treino.status}">
+                                ${treino.status.charAt(0).toUpperCase() + treino.status.slice(1)}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editarTreino(${treino.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info me-1" onclick="verExercicios(${treino.id})">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="inativarTreino(${treino.id})">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar treinos:', error));
+    }
+
+    function carregarAlunos() {
+        fetch('/api/alunos')
+            .then(response => response.json())
+            .then(alunos => {
+                const selectModal = document.querySelector('select[name="aluno"]');
+                const selectFiltro = document.getElementById('filtroAluno');
+                
+                alunos.forEach(aluno => {
+                    const optionModal = document.createElement('option');
+                    optionModal.value = aluno.id;
+                    optionModal.textContent = aluno.nome;
+                    selectModal.appendChild(optionModal);
+
+                    const optionFiltro = document.createElement('option');
+                    optionFiltro.value = aluno.id;
+                    optionFiltro.textContent = aluno.nome;
+                    selectFiltro.appendChild(optionFiltro);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar alunos:', error));
+    }
+
+    function carregarProfessores() {
+        fetch('/api/professores')
+            .then(response => response.json())
+            .then(professores => {
+                const selectModal = document.querySelector('select[name="professor"]');
+                const selectFiltro = document.getElementById('filtroProfessor');
+                
+                professores.forEach(professor => {
+                    const optionModal = document.createElement('option');
+                    optionModal.value = professor.id;
+                    optionModal.textContent = professor.nome;
+                    selectModal.appendChild(optionModal);
+
+                    const optionFiltro = document.createElement('option');
+                    optionFiltro.value = professor.id;
+                    optionFiltro.textContent = professor.nome;
+                    selectFiltro.appendChild(optionFiltro);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar professores:', error));
+    }
+
+    function adicionarExercicio() {
+        const container = document.getElementById('exerciciosContainer');
+        const template = container.querySelector('.exercicio-item').cloneNode(true);
+        
+        // Limpa os valores
+        template.querySelectorAll('input').forEach(input => {
+            input.value = '';
+        });
+        
+        container.appendChild(template);
+    }
+
+    function salvarTreino() {
+        const form = document.getElementById('formTreino');
+        const formData = new FormData(form);
+
+        fetch('/api/treinos', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.erro) {
+                alert(data.erro);
+            } else {
+                alert('Treino salvo com sucesso!');
+                $('#modalTreino').modal('hide');
+                carregarTreinos();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao salvar treino:', error);
+            alert('Erro ao salvar treino');
+        });
+    }
+
+    function editarTreino(id) {
+        fetch(`/api/treinos/${id}`)
+            .then(response => response.json())
+            .then(treino => {
+                const form = document.getElementById('formTreino');
+                
+                // Preenche os campos do formulário
+                form.querySelector('[name="aluno"]').value = treino.aluno_id;
+                form.querySelector('[name="tipo"]').value = treino.tipo;
+                form.querySelector('[name="professor"]').value = treino.professor_id;
+                form.querySelector('[name="data_inicio"]').value = treino.data_inicio;
+                form.querySelector('[name="observacoes"]').value = treino.observacoes;
+                form.querySelector('[name="status"]').value = treino.status;
+
+                // Limpa os exercícios existentes
+                const exerciciosContainer = document.getElementById('exerciciosContainer');
+                exerciciosContainer.innerHTML = '';
+
+                // Adiciona os exercícios do treino
+                treino.exercicios.forEach(exercicio => {
+                    const exercicioItem = document.createElement('div');
+                    exercicioItem.className = 'exercicio-item d-flex align-items-center';
+                    exercicioItem.innerHTML = `
+                        <input type="text" class="form-control me-2" name="exercicio[]" placeholder="Nome do exercício" required>
+                        <input type="text" class="form-control me-2" name="series[]" placeholder="Séries" required>
+                        <input type="text" class="form-control me-2" name="repeticoes[]" placeholder="Repetições" required>
+                        <input type="text" class="form-control me-2" name="carga[]" placeholder="Carga (kg)" required>
+                        <button type="button" class="btn-remover-exercicio">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    exerciciosContainer.appendChild(exercicioItem);
+
+                    // Preenche os valores do exercício
+                    const inputs = exercicioItem.getElementsByTagName('input');
+                    inputs[0].value = exercicio.nome;
+                    inputs[1].value = exercicio.series;
+                    inputs[2].value = exercicio.repeticoes;
+                    inputs[3].value = exercicio.carga;
+                });
+
+                $('#modalTreino').modal('show');
+            })
+            .catch(error => console.error('Erro ao carregar treino:', error));
+    }
+
+    function verExercicios(id) {
+        fetch(`/api/treinos/${id}/exercicios`)
+            .then(response => response.json())
+            .then(exercicios => {
+                let html = '<ul class="list-group">';
+                exercicios.forEach(exercicio => {
+                    html += `
+                        <li class="list-group-item">
+                            <strong>${exercicio.nome}</strong><br>
+                            Séries: ${exercicio.series} | 
+                            Repetições: ${exercicio.repeticoes} | 
+                            Carga: ${exercicio.carga}kg
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                
+                alert('Funcionalidade em desenvolvimento');
+                // Implementar modal para exibir os exercícios
+            })
+            .catch(error => console.error('Erro ao carregar exercícios:', error));
+    }
+
+    function inativarTreino(id) {
+        if (confirm('Tem certeza que deseja inativar este treino?')) {
+            fetch(`/api/treinos/${id}/inativar`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensagem);
+                carregarTreinos();
+            })
+            .catch(error => console.error('Erro ao inativar treino:', error));
         }
+    }
+
+    function filtrarTreinos() {
+        const aluno = document.getElementById('filtroAluno').value;
+        const tipo = document.getElementById('filtroTipo').value;
+        const professor = document.getElementById('filtroProfessor').value;
+        const status = document.getElementById('filtroStatus').value;
+
+        const rows = document.getElementById('listaTreinos').getElementsByTagName('tr');
+        
+        Array.from(rows).forEach(row => {
+            let mostrar = true;
+            
+            if (aluno && !row.cells[0].textContent.includes(aluno)) {
+                mostrar = false;
+            }
+            
+            if (tipo && !row.cells[1].textContent.toLowerCase().includes(tipo)) {
+                mostrar = false;
+            }
+            
+            if (professor && !row.cells[2].textContent.includes(professor)) {
+                mostrar = false;
+            }
+            
+            if (status && !row.cells[4].textContent.toLowerCase().includes(status)) {
+                mostrar = false;
+            }
+            
+            row.style.display = mostrar ? '' : 'none';
+        });
+    }
+
+    function formatarTipo(tipo) {
+        const tipos = {
+            'musculacao': 'Musculação',
+            'cardio': 'Cardio',
+            'funcional': 'Funcional'
+        };
+        return tipos[tipo] || tipo;
+    }
+
+    function formatarData(data) {
+        if (!data) return '-';
+        return new Date(data).toLocaleDateString('pt-BR');
     }
 </script>
 {% endblock %} 
