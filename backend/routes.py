@@ -70,14 +70,18 @@ def dashboard():
     if current_user.tipo != 'gerente':
         return redirect(url_for('rotas.index'))
     
+    # Calcula o primeiro dia do mês atual
+    hoje = datetime.now()
+    primeiro_dia_mes = datetime(hoje.year, hoje.month, 1)
+    
     # Calcula métricas
     metricas = {
         'total_alunos': Aluno.query.filter_by(status='ativo').count(),
         'receita_mensal': db.session.query(db.func.sum(Pagamento.valor)).\
-            filter(Pagamento.data_pagamento >= db.func.date_trunc('month', db.func.current_date())).\
+            filter(Pagamento.data_pagamento >= primeiro_dia_mes).\
             scalar() or 0,
         'novas_matriculas': Aluno.query.filter(
-            Aluno.data_criacao >= (datetime.now() - timedelta(days=30))
+            Aluno.data_criacao >= (hoje - timedelta(days=30))
         ).count(),
         'presenca_diaria': 0,  # Implementar contagem de presenças
         
@@ -86,16 +90,22 @@ def dashboard():
             'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
             'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
         ],
-        'valores_mensais': [0] * 12  # Implementar valores reais
+        'valores_mensais': [0] * 12  # Inicializa com zeros
     }
     
     # Calcula valores mensais
-    ano_atual = datetime.now().year
+    ano_atual = hoje.year
     for mes in range(12):
+        inicio_mes = datetime(ano_atual, mes + 1, 1)
+        if mes < 11:
+            fim_mes = datetime(ano_atual, mes + 2, 1)
+        else:
+            fim_mes = datetime(ano_atual + 1, 1, 1)
+            
         valor = db.session.query(db.func.sum(Pagamento.valor)).\
             filter(
-                db.func.extract('year', Pagamento.data_pagamento) == ano_atual,
-                db.func.extract('month', Pagamento.data_pagamento) == mes + 1
+                Pagamento.data_pagamento >= inicio_mes,
+                Pagamento.data_pagamento < fim_mes
             ).scalar()
         metricas['valores_mensais'][mes] = float(valor or 0)
     
