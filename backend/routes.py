@@ -443,7 +443,7 @@ def cadastro_usuarios():
 
 @rotas.route('/usuarios/professores', methods=['GET', 'POST'])
 @login_required
-def gerenciar_professores():
+def listar_cadastrar_professores():
     """
     Gerencia professores
     GET: Lista professores
@@ -488,7 +488,7 @@ def gerenciar_professores():
 
 @rotas.route('/usuarios/recepcionistas', methods=['GET', 'POST'])
 @login_required
-def gerenciar_recepcionistas():
+def listar_cadastrar_recepcionistas():
     """
     Gerencia recepcionistas
     GET: Lista recepcionistas
