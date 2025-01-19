@@ -45,8 +45,18 @@ def criar_usuarios_iniciais():
                 nome=dados['nome'],
                 tipo=dados['tipo']
             )
-            novo_usuario.set_senha(dados['senha'])
+            novo_usuario.senha = dados['senha']  # Usando o property setter
             db.session.add(novo_usuario)
+            
+            # Se for professor, cria o registro de professor
+            if dados['tipo'] == 'professor':
+                professor = Professor(
+                    usuario=novo_usuario,
+                    especialidade='Musculação',
+                    horario_disponivel='08:00-18:00'
+                )
+                db.session.add(professor)
+            
             print(f"Usuário {dados['nome']} criado com sucesso!")
             print(f"Email: {dados['email']}")
             print(f"Senha: {dados['senha']}")
@@ -57,10 +67,30 @@ def criar_usuarios_iniciais():
 def criar_planos_iniciais():
     """Cria planos básicos da academia"""
     planos = [
-        {'nome': 'Mensal', 'valor': 100.0, 'duracao': 1},
-        {'nome': 'Trimestral', 'valor': 270.0, 'duracao': 3},
-        {'nome': 'Semestral', 'valor': 510.0, 'duracao': 6},
-        {'nome': 'Anual', 'valor': 960.0, 'duracao': 12}
+        {
+            'nome': 'Mensal',
+            'valor': 100.0,
+            'duracao_meses': 1,
+            'descricao': 'Plano mensal com acesso a todas as modalidades'
+        },
+        {
+            'nome': 'Trimestral',
+            'valor': 270.0,
+            'duracao_meses': 3,
+            'descricao': 'Plano trimestral com 10% de desconto'
+        },
+        {
+            'nome': 'Semestral',
+            'valor': 510.0,
+            'duracao_meses': 6,
+            'descricao': 'Plano semestral com 15% de desconto'
+        },
+        {
+            'nome': 'Anual',
+            'valor': 960.0,
+            'duracao_meses': 12,
+            'descricao': 'Plano anual com 20% de desconto'
+        }
     ]
     
     for dados in planos:
@@ -69,35 +99,6 @@ def criar_planos_iniciais():
             novo_plano = Plano(**dados)
             db.session.add(novo_plano)
             print(f"Plano {dados['nome']} criado com sucesso!")
-    
-    db.session.commit()
-
-def criar_professores_iniciais():
-    """Cria professores iniciais"""
-    professores = [
-        {
-            'nome': 'João Silva',
-            'especialidade': 'Musculação',
-            'horario_disponivel': '06:00-22:00'
-        },
-        {
-            'nome': 'Maria Santos',
-            'especialidade': 'Zumba',
-            'horario_disponivel': '08:00-20:00'
-        },
-        {
-            'nome': 'Pedro Oliveira',
-            'especialidade': 'CrossFit',
-            'horario_disponivel': '06:00-12:00'
-        }
-    ]
-    
-    for dados in professores:
-        professor = Professor.query.filter_by(nome=dados['nome']).first()
-        if not professor:
-            novo_professor = Professor(**dados)
-            db.session.add(novo_professor)
-            print(f"Professor {dados['nome']} criado com sucesso!")
     
     db.session.commit()
 
@@ -120,7 +121,6 @@ def inicializar_sistema():
         # Criar dados iniciais
         criar_usuarios_iniciais()
         criar_planos_iniciais()
-        criar_professores_iniciais()
     
     print("\nSistema inicializado com sucesso!")
     print("\nAcesse o sistema usando uma das seguintes contas:")
