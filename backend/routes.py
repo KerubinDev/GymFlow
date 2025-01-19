@@ -80,7 +80,7 @@ def alunos():
     """
     if current_user.tipo not in ['gerente', 'recepcionista']:
         return redirect(url_for('rotas.index'))
-    return render_template('alunos.html')
+    return render_template('cadastro_alunos.html')
 
 
 @rotas.route('/treinos')
@@ -102,7 +102,7 @@ def turmas():
     """
     if current_user.tipo not in ['gerente', 'professor']:
         return redirect(url_for('rotas.index'))
-    return render_template('turmas.html')
+    return render_template('horarios_turmas.html')
 
 
 @rotas.route('/pagamentos')
@@ -113,7 +113,7 @@ def pagamentos():
     """
     if current_user.tipo not in ['gerente', 'recepcionista']:
         return redirect(url_for('rotas.index'))
-    return render_template('pagamentos.html')
+    return render_template('gestao_pagamentos.html')
 
 
 @rotas.route('/usuarios')
@@ -124,7 +124,7 @@ def usuarios():
     """
     if current_user.tipo != 'gerente':
         return redirect(url_for('rotas.index'))
-    return render_template('usuarios.html')
+    return render_template('cadastro_usuarios.html')
 
 
 # API Routes

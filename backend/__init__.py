@@ -30,7 +30,9 @@ def create_app(config_name=None):
     Returns:
         Flask: Aplicação Flask configurada
     """
-    app = Flask(__name__)
+    app = Flask(__name__, 
+                template_folder='../templates',  # Define o caminho para os templates
+                static_folder='../static')       # Define o caminho para os arquivos estáticos
     
     # Carrega configurações
     from .config import get_config

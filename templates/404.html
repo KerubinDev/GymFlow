@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Página Não Encontrada - GymFlow{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1 class="display-1">404</h1>
+            <h2>Página Não Encontrada</h2>
+            <p class="lead">A página que você está procurando não existe ou foi movida.</p>
+            <a href="{{ url_for('rotas.index') }}" class="btn btn-primary">Voltar para a Página Inicial</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 
