@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import (Usuario, Aluno, Plano, Pagamento, Professor, 
+from .models import (Usuario, Aluno, Plano, Pagamento, Professor, 
                    Turma, Treino, db)
 from flask_login import login_required, current_user
 from datetime import datetime
