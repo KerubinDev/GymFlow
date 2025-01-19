@@ -24,4 +24,9 @@ def create_app():
     # Registra blueprints
     app.register_blueprint(rotas)
     
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import Usuario
+        return Usuario.query.get(int(user_id))
+    
     return app 

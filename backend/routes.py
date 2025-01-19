@@ -1,11 +1,117 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template, redirect, url_for
 from .models import (Usuario, Aluno, Plano, Pagamento, Professor, 
                    Turma, Treino, db)
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user, logout_user
 from datetime import datetime
 
 # Criação do Blueprint para organizar as rotas
 rotas = Blueprint('rotas', __name__)
+
+
+@rotas.route('/')
+def index():
+    """
+    Rota principal que redireciona baseado no status de login
+    """
+    if current_user.is_authenticated:
+        # Redireciona baseado no tipo de usuário
+        if current_user.tipo == 'gerente':
+            return redirect(url_for('rotas.dashboard'))
+        elif current_user.tipo == 'professor':
+            return redirect(url_for('rotas.treinos'))
+        elif current_user.tipo == 'recepcionista':
+            return redirect(url_for('rotas.gerenciar_alunos'))
+    return redirect(url_for('rotas.login'))
+
+
+@rotas.route('/login', methods=['GET', 'POST'])
+def login():
+    """
+    Gerencia o login de usuários.
+    GET: Exibe página de login
+    POST: Processa o login
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('rotas.index'))
+    
+    if request.method == 'GET':
+        return render_template('login.html')
+    
+    dados = request.get_json()
+    usuario = Usuario.query.filter_by(email=dados['email']).first()
+    
+    if usuario and usuario.verificar_senha(dados['senha']):
+        login_user(usuario)
+        return jsonify({
+            'token': usuario.gerar_token(),
+            'usuario': usuario.to_dict(),
+            'redirect': url_for('rotas.index')
+        })
+    
+    return jsonify({'erro': 'Credenciais inválidas'}), 401
+
+
+@rotas.route('/logout')
+@login_required
+def logout():
+    """
+    Realiza o logout do usuário
+    """
+    logout_user()
+    return redirect(url_for('rotas.login'))
+
+
+@rotas.route('/dashboard')
+@login_required
+def dashboard():
+    """
+    Exibe o dashboard administrativo
+    """
+    if current_user.tipo != 'gerente':
+        return redirect(url_for('rotas.index'))
+    return render_template('dashboard.html')
+
+
+@rotas.route('/treinos')
+@login_required
+def treinos():
+    """
+    Exibe a página de treinos
+    """
+    if current_user.tipo not in ['gerente', 'professor']:
+        return redirect(url_for('rotas.index'))
+    return render_template('treinos.html')
+
+
+@rotas.route('/alunos')
+@login_required
+def alunos():
+    """
+    Exibe a página de gestão de alunos
+    """
+    if current_user.tipo not in ['gerente', 'recepcionista']:
+        return redirect(url_for('rotas.index'))
+    return render_template('cadastro_alunos.html')
+
+
+@rotas.route('/pagamentos')
+@login_required
+def pagamentos():
+    """
+    Exibe a página de gestão de pagamentos
+    """
+    if current_user.tipo not in ['gerente', 'recepcionista']:
+        return redirect(url_for('rotas.index'))
+    return render_template('gestao_pagamentos.html')
+
+
+@rotas.route('/horarios')
+@login_required
+def horarios():
+    """
+    Exibe a página de horários e turmas
+    """
+    return render_template('horarios_turmas.html')
 
 
 @rotas.route('/usuarios', methods=['GET', 'POST'])
@@ -203,24 +309,6 @@ def gerenciar_aluno(id):
     db.session.delete(aluno)
     db.session.commit()
     return '', 204
-
-
-@rotas.route('/login', methods=['POST'])
-def login():
-    """
-    Realiza o login do usuário no sistema.
-    POST: Autentica usuário e retorna token de acesso
-    """
-    dados = request.get_json()
-    usuario = Usuario.query.filter_by(email=dados['email']).first()
-    
-    if usuario and usuario.verificar_senha(dados['senha']):
-        return jsonify({
-            'token': usuario.gerar_token(),
-            'usuario': usuario.to_dict()
-        })
-    
-    return jsonify({'erro': 'Credenciais inválidas'}), 401
 
 
 @rotas.route('/recuperar-senha', methods=['POST'])

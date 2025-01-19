@@ -4,10 +4,11 @@ from datetime import datetime
 import jwt
 from .config import Config
 from typing import Dict, Any
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-class Usuario(db.Model):
+class Usuario(db.Model, UserMixin):
     """Modelo para usuários do sistema."""
     __tablename__ = 'usuarios'
     
@@ -41,6 +42,25 @@ class Usuario(db.Model):
             'email': self.email,
             'tipo': self.tipo
         }
+    
+    def get_id(self):
+        """Método necessário para Flask-Login"""
+        return str(self.id)
+    
+    @property
+    def is_active(self):
+        """Método necessário para Flask-Login"""
+        return True
+    
+    @property
+    def is_authenticated(self):
+        """Método necessário para Flask-Login"""
+        return True
+    
+    @property
+    def is_anonymous(self):
+        """Método necessário para Flask-Login"""
+        return False
 
 
 class Aluno(db.Model):
