@@ -4,11 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import jwt
-from .config import Config
+from . import db
 from typing import Dict, Any
 from flask_login import UserMixin
-
-db = SQLAlchemy()
 
 class Usuario(db.Model, UserMixin):
     """Modelo para usuários do sistema."""
@@ -579,24 +577,30 @@ def init_db():
     """Inicializa o banco de dados."""
     db.create_all()
     
-    # Cria usuário admin se não existir
-    if not Usuario.query.filter_by(email='admin@academia.com').first():
-        admin = Usuario(
-            nome='Administrador',
-            email='admin@academia.com',
-            tipo='gerente'
-        )
-        admin.set_senha('admin123')
-        db.session.add(admin)
-        
-        # Cria planos básicos
-        planos = [
-            Plano(nome='Mensal', valor=100.0, duracao_meses=1),
-            Plano(nome='Trimestral', valor=270.0, duracao_meses=3),
-            Plano(nome='Semestral', valor=510.0, duracao_meses=6),
-            Plano(nome='Anual', valor=960.0, duracao_meses=12)
-        ]
-        for plano in planos:
-            db.session.add(plano)
-        
-        db.session.commit() 
+    try:
+        # Cria usuário admin se não existir
+        admin = Usuario.query.filter_by(email='admin@academia.com').first()
+        if not admin:
+            admin = Usuario(
+                nome='Administrador',
+                email='admin@academia.com',
+                tipo='gerente'
+            )
+            admin.senha = 'admin123'
+            db.session.add(admin)
+            
+            # Cria planos básicos
+            planos = [
+                Plano(nome='Mensal', valor=100.0, duracao_meses=1),
+                Plano(nome='Trimestral', valor=270.0, duracao_meses=3),
+                Plano(nome='Semestral', valor=510.0, duracao_meses=6),
+                Plano(nome='Anual', valor=960.0, duracao_meses=12)
+            ]
+            for plano in planos:
+                db.session.add(plano)
+            
+            db.session.commit()
+            print('Banco de dados inicializado com sucesso!')
+    except Exception as e:
+        db.session.rollback()
+        print(f'Erro ao inicializar banco de dados: {e}') 

@@ -11,9 +11,6 @@ from flask_jwt_extended import JWTManager
 from flask_caching import Cache
 from flask_talisman import Talisman
 
-# Importa configurações
-from .config import get_config
-
 # Inicializa extensões
 db = SQLAlchemy()
 migrate = Migrate()
@@ -36,6 +33,7 @@ def create_app(config_name=None):
     app = Flask(__name__)
     
     # Carrega configurações
+    from .config import get_config
     config = get_config()
     app.config.from_object(config)
     
@@ -50,12 +48,8 @@ def create_app(config_name=None):
     Talisman(app, content_security_policy=None)
     
     # Configura login
-    login_manager.login_view = 'rotas.login'
+    login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
-    
-    # Registra blueprints
-    from .routes import rotas
-    app.register_blueprint(rotas)
     
     # Cria diretórios necessários
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -67,6 +61,10 @@ def create_app(config_name=None):
     def load_user(user_id):
         """Carrega usuário pelo ID."""
         return Usuario.query.get(int(user_id))
+    
+    # Registra blueprints
+    from .routes import rotas
+    app.register_blueprint(rotas)
     
     # Configura handlers de erro
     @app.errorhandler(404)
