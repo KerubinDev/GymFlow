@@ -14,6 +14,32 @@
             padding-top: 20px;
         }
         
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px 30px;
+            border-bottom: 1px solid #495057;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            color: #0d6efd;
+        }
+        
         .sidebar .nav-link {
             color: #fff;
             padding: 10px 20px;
@@ -46,11 +72,10 @@
             margin-bottom: 15px;
         }
         
-        .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .user-info i {
+            font-size: 1.5rem;
             margin-right: 10px;
+            color: #0d6efd;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -60,8 +85,13 @@
         <div class="row">
             {% if current_user.is_authenticated %}
             <div class="col-md-2 px-0 sidebar">
+                <div class="logo-container">
+                    <i class="bi bi-universal-access logo-icon"></i>
+                    <div class="logo-text">Gym<span>Flow</span></div>
+                </div>
+                
                 <div class="user-info">
-                    <img src="https://via.placeholder.com/40" alt="Foto do usuário">
+                    <i class="bi bi-person-circle"></i>
                     <div>
                         <div>{{ current_user.nome }}</div>
                         <small>{{ current_user.tipo|title }}</small>
