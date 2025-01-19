@@ -428,3 +428,189 @@ def personalizar_treino(aluno_id):
     
     db.session.commit()
     return jsonify({'mensagem': 'Treino atualizado com sucesso'})
+
+
+@rotas.route('/usuarios/cadastro', methods=['GET'])
+@login_required
+def cadastro_usuarios():
+    """
+    Exibe a página de cadastro de usuários (professores e recepcionistas)
+    """
+    if current_user.tipo != 'gerente':
+        return redirect(url_for('rotas.index'))
+    return render_template('cadastro_usuarios.html')
+
+
+@rotas.route('/usuarios/professores', methods=['GET', 'POST'])
+@login_required
+def gerenciar_professores():
+    """
+    Gerencia professores
+    GET: Lista professores
+    POST: Cadastra novo professor
+    """
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso negado'}), 403
+
+    if request.method == 'GET':
+        professores = Professor.query.all()
+        return jsonify([p.to_dict() for p in professores])
+    
+    dados = request.get_json()
+    
+    # Cria usuário para o professor
+    novo_usuario = Usuario(
+        nome=dados['nome'],
+        email=dados['email'],
+        tipo='professor'
+    )
+    novo_usuario.set_senha(dados['senha'])
+    db.session.add(novo_usuario)
+    
+    # Cria registro do professor
+    novo_professor = Professor(
+        nome=dados['nome'],
+        especialidade=dados['especialidade'],
+        horario_disponivel=dados['horario_disponivel']
+    )
+    db.session.add(novo_professor)
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'mensagem': 'Professor cadastrado com sucesso',
+            'professor': novo_professor.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': 'Erro ao cadastrar professor'}), 400
+
+
+@rotas.route('/usuarios/recepcionistas', methods=['GET', 'POST'])
+@login_required
+def gerenciar_recepcionistas():
+    """
+    Gerencia recepcionistas
+    GET: Lista recepcionistas
+    POST: Cadastra novo recepcionista
+    """
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso negado'}), 403
+
+    if request.method == 'GET':
+        recepcionistas = Usuario.query.filter_by(tipo='recepcionista').all()
+        return jsonify([r.to_dict() for r in recepcionistas])
+    
+    dados = request.get_json()
+    novo_usuario = Usuario(
+        nome=dados['nome'],
+        email=dados['email'],
+        tipo='recepcionista'
+    )
+    novo_usuario.set_senha(dados['senha'])
+    
+    try:
+        db.session.add(novo_usuario)
+        db.session.commit()
+        return jsonify({
+            'mensagem': 'Recepcionista cadastrado com sucesso',
+            'usuario': novo_usuario.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': 'Erro ao cadastrar recepcionista'}), 400
+
+
+@rotas.route('/usuarios/<int:id>', methods=['PUT', 'DELETE'])
+@login_required
+def gerenciar_usuario_especifico(id):
+    """
+    Gerencia um usuário específico
+    PUT: Atualiza dados
+    DELETE: Remove usuário
+    """
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso negado'}), 403
+    
+    usuario = Usuario.query.get_or_404(id)
+    
+    if request.method == 'PUT':
+        dados = request.get_json()
+        usuario.nome = dados.get('nome', usuario.nome)
+        usuario.email = dados.get('email', usuario.email)
+        if 'senha' in dados:
+            usuario.set_senha(dados['senha'])
+        
+        try:
+            db.session.commit()
+            return jsonify({
+                'mensagem': 'Usuário atualizado com sucesso',
+                'usuario': usuario.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'erro': 'Erro ao atualizar usuário'}), 400
+    
+    # DELETE
+    try:
+        db.session.delete(usuario)
+        db.session.commit()
+        return jsonify({'mensagem': 'Usuário removido com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': 'Erro ao remover usuário'}), 400
+
+
+# Ajuste na rota do dashboard para incluir mais informações
+@rotas.route('/dashboard/dados', methods=['GET'])
+@login_required
+def dados_dashboard():
+    """
+    Retorna dados completos para o dashboard
+    """
+    if current_user.tipo != 'gerente':
+        return jsonify({'erro': 'Acesso negado'}), 403
+    
+    total_alunos = Aluno.query.count()
+    total_professores = Professor.query.count()
+    total_recepcionistas = Usuario.query.filter_by(tipo='recepcionista').count()
+    total_receitas = db.session.query(
+        db.func.sum(Pagamento.valor)
+    ).filter_by(status='pago').scalar() or 0
+    
+    # Estatísticas de turmas
+    turmas = Turma.query.all()
+    ocupacao_turmas = []
+    for turma in turmas:
+        ocupacao = {
+            'turma': turma.nome,
+            'professor': turma.professor.nome,
+            'ocupacao': (turma.alunos.count() / turma.capacidade) * 100,
+            'total_alunos': turma.alunos.count(),
+            'capacidade': turma.capacidade
+        }
+        ocupacao_turmas.append(ocupacao)
+    
+    # Estatísticas de pagamentos
+    pagamentos_mes = db.session.query(
+        db.func.strftime('%Y-%m', Pagamento.data_pagamento).label('mes'),
+        db.func.sum(Pagamento.valor).label('total')
+    ).group_by('mes').all()
+    
+    # Alunos inadimplentes
+    alunos_inadimplentes = Aluno.query.filter_by(status='inadimplente').count()
+    taxa_inadimplencia = (alunos_inadimplentes / total_alunos * 100) if total_alunos > 0 else 0
+    
+    return jsonify({
+        'total_alunos': total_alunos,
+        'total_professores': total_professores,
+        'total_recepcionistas': total_recepcionistas,
+        'total_receitas': float(total_receitas),
+        'ocupacao_turmas': ocupacao_turmas,
+        'evolucao_pagamentos': [
+            {'mes': p.mes, 'total': float(p.total)} 
+            for p in pagamentos_mes
+        ],
+        'taxa_inadimplencia': taxa_inadimplencia,
+        'alunos_inadimplentes': alunos_inadimplentes
+    })

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Usuários - Sistema Academia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <!-- Abas para diferentes tipos de usuários -->
+        <ul class="nav nav-tabs mb-4" id="userTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="professores-tab" data-bs-toggle="tab" 
+                   href="#professores" role="tab">Professores</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="recepcionistas-tab" data-bs-toggle="tab" 
+                   href="#recepcionistas" role="tab">Recepcionistas</a>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das abas -->
+        <div class="tab-content" id="userTabsContent">
+            <!-- Aba de Professores -->
+            <div class="tab-pane fade show active" id="professores" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Professores</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" 
+                                data-bs-target="#modalProfessor">
+                            Novo Professor
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Especialidade</th>
+                                        <th>Horário</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaProfessores">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Recepcionistas -->
+            <div class="tab-pane fade" id="recepcionistas" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Recepcionistas</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" 
+                                data-bs-target="#modalRecepcionista">
+                            Novo Recepcionista
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaRecepcionistas">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Professor -->
+    <div class="modal fade" id="modalProfessor" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastro de Professor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProfessor">
+                        <input type="hidden" id="professorId">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="professorNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="professorEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="professorSenha" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Especialidade</label>
+                            <input type="text" class="form-control" id="professorEspecialidade" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Horário Disponível</label>
+                            <input type="text" class="form-control" id="professorHorario" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarProfessor">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Recepcionista -->
+    <div class="modal fade" id="modalRecepcionista" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastro de Recepcionista</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRecepcionista">
+                        <input type="hidden" id="recepcionistaId">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="recepcionistaNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="recepcionistaEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="recepcionistaSenha" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarRecepcionista">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalProfessor = new bootstrap.Modal(document.getElementById('modalProfessor'));
+            const modalRecepcionista = new bootstrap.Modal(
+                document.getElementById('modalRecepcionista')
+            );
+
+            // Carrega dados iniciais
+            carregarProfessores();
+            carregarRecepcionistas();
+
+            // Funções de carregamento
+            async function carregarProfessores() {
+                try {
+                    const response = await fetch('/usuarios/professores', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const professores = await response.json();
+                    
+                    const tbody = document.getElementById('tabelaProfessores');
+                    tbody.innerHTML = '';
+                    
+                    professores.forEach(professor => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${professor.nome}</td>
+                            <td>${professor.email}</td>
+                            <td>${professor.especialidade}</td>
+                            <td>${professor.horario_disponivel}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2"
+                                        onclick="editarProfessor(${professor.id})">
+                                    Editar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="excluirProfessor(${professor.id})">
+                                    Excluir
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } catch (erro) {
+                    console.error('Erro:', erro);
+                }
+            }
+
+            async function carregarRecepcionistas() {
+                try {
+                    const response = await fetch('/usuarios/recepcionistas', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const recepcionistas = await response.json();
+                    
+                    const tbody = document.getElementById('tabelaRecepcionistas');
+                    tbody.innerHTML = '';
+                    
+                    recepcionistas.forEach(recepcionista => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${recepcionista.nome}</td>
+                            <td>${recepcionista.email}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2"
+                                        onclick="editarRecepcionista(${recepcionista.id})">
+                                    Editar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="excluirRecepcionista(${recepcionista.id})">
+                                    Excluir
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } catch (erro) {
+                    console.error('Erro:', erro);
+                }
+            }
+
+            // Eventos de salvamento
+            document.getElementById('btnSalvarProfessor').addEventListener('click', async () => {
+                const dados = {
+                    nome: document.getElementById('professorNome').value,
+                    email: document.getElementById('professorEmail').value,
+                    senha: document.getElementById('professorSenha').value,
+                    especialidade: document.getElementById('professorEspecialidade').value,
+                    horario_disponivel: document.getElementById('professorHorario').value
+                };
+
+                try {
+                    const response = await fetch('/usuarios/professores', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(dados)
+                    });
+
+                    if (response.ok) {
+                        alert('Professor cadastrado com sucesso!');
+                        modalProfessor.hide();
+                        carregarProfessores();
+                    } else {
+                        const erro = await response.json();
+                        alert(erro.erro || 'Erro ao cadastrar professor');
+                    }
+                } catch (erro) {
+                    console.error('Erro:', erro);
+                    alert('Erro ao processar requisição');
+                }
+            });
+
+            document.getElementById('btnSalvarRecepcionista')
+                .addEventListener('click', async () => {
+                    const dados = {
+                        nome: document.getElementById('recepcionistaNome').value,
+                        email: document.getElementById('recepcionistaEmail').value,
+                        senha: document.getElementById('recepcionistaSenha').value
+                    };
+
+                    try {
+                        const response = await fetch('/usuarios/recepcionistas', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            },
+                            body: JSON.stringify(dados)
+                        });
+
+                        if (response.ok) {
+                            alert('Recepcionista cadastrado com sucesso!');
+                            modalRecepcionista.hide();
+                            carregarRecepcionistas();
+                        } else {
+                            const erro = await response.json();
+                            alert(erro.erro || 'Erro ao cadastrar recepcionista');
+                        }
+                    } catch (erro) {
+                        console.error('Erro:', erro);
+                        alert('Erro ao processar requisição');
+                    }
+                });
+        });
+
+        // Funções globais
+        async function editarProfessor(id) {
+            // Implementar edição
+            alert('Funcionalidade em desenvolvimento');
+        }
+
+        async function excluirProfessor(id) {
+            if (!confirm('Deseja realmente excluir este professor?')) return;
+            
+            try {
+                const response = await fetch(`/usuarios/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Professor excluído com sucesso!');
+                    carregarProfessores();
+                } else {
+                    const erro = await response.json();
+                    alert(erro.erro || 'Erro ao excluir professor');
+                }
+            } catch (erro) {
+                console.error('Erro:', erro);
+                alert('Erro ao processar requisição');
+            }
+        }
+
+        async function editarRecepcionista(id) {
+            // Implementar edição
+            alert('Funcionalidade em desenvolvimento');
+        }
+
+        async function excluirRecepcionista(id) {
+            if (!confirm('Deseja realmente excluir este recepcionista?')) return;
+            
+            try {
+                const response = await fetch(`/usuarios/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Recepcionista excluído com sucesso!');
+                    carregarRecepcionistas();
+                } else {
+                    const erro = await response.json();
+                    alert(erro.erro || 'Erro ao excluir recepcionista');
+                }
+            } catch (erro) {
+                console.error('Erro:', erro);
+                alert('Erro ao processar requisição');
+            }
+        }
+    </script>
+</body>
+</html> 
