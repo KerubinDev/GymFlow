@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema Academia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .card-dashboard {
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .card-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="mb-4">Dashboard</h1>
+        
+        <!-- Cards Principais -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <div class="card-value" id="totalAlunos">0</div>
+                        <div class="card-label">Total de Alunos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <div class="card-value" id="totalReceitas">R$ 0,00</div>
+                        <div class="card-label">Receita Total</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <div class="card-value" id="taxaOcupacao">0%</div>
+                        <div class="card-label">Taxa de Ocupação</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <div class="card-value" id="taxaInadimplencia">0%</div>
+                        <div class="card-label">Taxa de Inadimplência</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <h5 class="card-title">Evolução de Matrículas</h5>
+                        <div class="chart-container">
+                            <canvas id="graficoMatriculas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <h5 class="card-title">Ocupação por Turma</h5>
+                        <div class="chart-container">
+                            <canvas id="graficoOcupacao"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabela de Resumo -->
+        <div class="card card-dashboard mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Resumo por Turma</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Turma</th>
+                                <th>Professor</th>
+                                <th>Alunos</th>
+                                <th>Ocupação</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaTurmas">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            let graficoMatriculas, graficoOcupacao;
+
+            // Carrega dados do dashboard
+            async function carregarDados() {
+                try {
+                    const response = await fetch('/dashboard', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const dados = await response.json();
+                    
+                    // Atualiza cards
+                    document.getElementById('totalAlunos').textContent = 
+                        dados.total_alunos;
+                    document.getElementById('totalReceitas').textContent = 
+                        `R$ ${dados.total_receitas.toFixed(2)}`;
+                    document.getElementById('taxaOcupacao').textContent = 
+                        `${dados.taxa_ocupacao.toFixed(1)}%`;
+                    document.getElementById('taxaInadimplencia').textContent = 
+                        `${dados.taxa_inadimplencia.toFixed(1)}%`;
+                    
+                    // Atualiza gráfico de matrículas
+                    atualizarGraficoMatriculas(dados.evolucao_matriculas);
+                    
+                    // Atualiza gráfico de ocupação
+                    atualizarGraficoOcupacao(dados.ocupacao_turmas);
+                    
+                    // Atualiza tabela de turmas
+                    atualizarTabelaTurmas(dados.resumo_turmas);
+                } catch (erro) {
+                    console.error('Erro ao carregar dados:', erro);
+                }
+            }
+
+            // Configura gráfico de matrículas
+            function atualizarGraficoMatriculas(dados) {
+                const ctx = document.getElementById('graficoMatriculas').getContext('2d');
+                
+                if (graficoMatriculas) {
+                    graficoMatriculas.destroy();
+                }
+                
+                graficoMatriculas = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dados.map(d => d.mes),
+                        datasets: [{
+                            label: 'Novas Matrículas',
+                            data: dados.map(d => d.quantidade),
+                            borderColor: '#0d6efd',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Configura gráfico de ocupação
+            function atualizarGraficoOcupacao(dados) {
+                const ctx = document.getElementById('graficoOcupacao').getContext('2d');
+                
+                if (graficoOcupacao) {
+                    graficoOcupacao.destroy();
+                }
+                
+                graficoOcupacao = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: dados.map(d => d.turma),
+                        datasets: [{
+                            label: 'Ocupação (%)',
+                            data: dados.map(d => d.ocupacao),
+                            backgroundColor: '#0d6efd'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Atualiza tabela de turmas
+            function atualizarTabelaTurmas(turmas) {
+                const tbody = document.getElementById('tabelaTurmas');
+                tbody.innerHTML = '';
+                
+                turmas.forEach(turma => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${turma.nome}</td>
+                        <td>${turma.professor}</td>
+                        <td>${turma.alunos}/${turma.capacidade}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: ${turma.ocupacao}%">
+                                    ${turma.ocupacao}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-${
+                                turma.ocupacao >= 90 ? 'danger' : 
+                                turma.ocupacao >= 70 ? 'warning' : 'success'
+                            }">
+                                ${
+                                    turma.ocupacao >= 90 ? 'Lotada' : 
+                                    turma.ocupacao >= 70 ? 'Atenção' : 'Disponível'
+                                }
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Inicialização
+            await carregarDados();
+            
+            // Atualiza dados a cada 5 minutos
+            setInterval(carregarDados, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html> 

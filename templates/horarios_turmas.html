@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horários e Turmas - Sistema Academia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    <style>
+        .horario-slot {
+            height: 100px;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .turma-card {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .ocupacao-indicator {
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        
+        .ocupacao-baixa { background-color: #28a745; }
+        .ocupacao-media { background-color: #ffc107; }
+        .ocupacao-alta { background-color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h2>Horários e Turmas</h2>
+            </div>
+            
+            <div class="card-body">
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="filtroProfessor" class="form-label">Professor</label>
+                        <select class="form-select" id="filtroProfessor">
+                            <option value="">Todos os professores</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filtroModalidade" class="form-label">Modalidade</label>
+                        <select class="form-select" id="filtroModalidade">
+                            <option value="">Todas as modalidades</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grade de Horários -->
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="fw-bold mb-3">Horários</div>
+                        <div class="horario-slot">06:00</div>
+                        <div class="horario-slot">07:00</div>
+                        <div class="horario-slot">08:00</div>
+                        <!-- Continua... -->
+                    </div>
+                    
+                    <div class="col-md-10">
+                        <div class="row mb-3">
+                            <div class="col">Segunda</div>
+                            <div class="col">Terça</div>
+                            <div class="col">Quarta</div>
+                            <div class="col">Quinta</div>
+                            <div class="col">Sexta</div>
+                        </div>
+                        
+                        <div id="gradeTurmas">
+                            <!-- Preenchido via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reserva -->
+    <div class="modal fade" id="modalReserva" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reservar Vaga</h5>
+                    <button type="button" 
+                            class="btn-close" 
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Turma: <span id="turmaNome"></span></p>
+                    <p>Professor: <span id="turmaProfessor"></span></p>
+                    <p>Horário: <span id="turmaHorario"></span></p>
+                    <p>Vagas disponíveis: <span id="turmaVagas"></span></p>
+                    
+                    <form id="formReserva">
+                        <div class="mb-3">
+                            <label for="alunoReserva" class="form-label">Aluno</label>
+                            <select class="form-select" id="alunoReserva" required>
+                                <option value="">Selecione o aluno</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            id="btnConfirmarReserva">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const modalReserva = new bootstrap.Modal(
+                document.getElementById('modalReserva')
+            );
+            let turmaSelecionada = null;
+
+            // Carrega professores
+            async function carregarProfessores() {
+                try {
+                    const response = await fetch('/professores', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const professores = await response.json();
+                    
+                    const select = document.getElementById('filtroProfessor');
+                    professores.forEach(professor => {
+                        const option = document.createElement('option');
+                        option.value = professor.id;
+                        option.textContent = professor.nome;
+                        select.appendChild(option);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar professores:', erro);
+                }
+            }
+
+            // Carrega turmas
+            async function carregarTurmas() {
+                try {
+                    const response = await fetch('/turmas', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const turmas = await response.json();
+                    
+                    const grade = document.getElementById('gradeTurmas');
+                    grade.innerHTML = '';
+                    
+                    // Agrupa turmas por horário
+                    const turmasPorHorario = {};
+                    turmas.forEach(turma => {
+                        if (!turmasPorHorario[turma.horario]) {
+                            turmasPorHorario[turma.horario] = [];
+                        }
+                        turmasPorHorario[turma.horario].push(turma);
+                    });
+                    
+                    // Cria slots de horário
+                    Object.keys(turmasPorHorario).sort().forEach(horario => {
+                        const row = document.createElement('div');
+                        row.className = 'row';
+                        
+                        // Cria slots para cada dia da semana
+                        for (let dia = 0; dia < 5; dia++) {
+                            const col = document.createElement('div');
+                            col.className = 'col horario-slot';
+                            
+                            const turmasDoDia = turmasPorHorario[horario]
+                                .filter(t => t.dia === dia);
+                            
+                            turmasDoDia.forEach(turma => {
+                                const ocupacao = (turma.alunos.length / 
+                                    turma.capacidade) * 100;
+                                let ocupacaoClass = 'ocupacao-baixa';
+                                if (ocupacao > 70) ocupacaoClass = 'ocupacao-alta';
+                                else if (ocupacao > 40) ocupacaoClass = 'ocupacao-media';
+                                
+                                const turmaElement = document.createElement('div');
+                                turmaElement.className = 'turma-card';
+                                turmaElement.innerHTML = `
+                                    <div>${turma.nome}</div>
+                                    <small>${turma.professor_nome}</small>
+                                    <div class="ocupacao-indicator ${ocupacaoClass}" 
+                                         style="width: ${ocupacao}%"></div>
+                                `;
+                                
+                                turmaElement.addEventListener('click', () => {
+                                    abrirModalReserva(turma);
+                                });
+                                
+                                col.appendChild(turmaElement);
+                            });
+                            
+                            row.appendChild(col);
+                        }
+                        
+                        grade.appendChild(row);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar turmas:', erro);
+                }
+            }
+
+            // Abre modal de reserva
+            function abrirModalReserva(turma) {
+                turmaSelecionada = turma;
+                document.getElementById('turmaNome').textContent = turma.nome;
+                document.getElementById('turmaProfessor').textContent = 
+                    turma.professor_nome;
+                document.getElementById('turmaHorario').textContent = turma.horario;
+                document.getElementById('turmaVagas').textContent = 
+                    turma.capacidade - turma.alunos.length;
+                modalReserva.show();
+            }
+
+            // Confirma reserva
+            document.getElementById('btnConfirmarReserva')
+                .addEventListener('click', async function() {
+                    if (!turmaSelecionada) return;
+                    
+                    const alunoId = document.getElementById('alunoReserva').value;
+                    
+                    try {
+                        const response = await fetch(
+                            `/turmas/${turmaSelecionada.id}/reservar`, 
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + 
+                                        localStorage.getItem('token')
+                                },
+                                body: JSON.stringify({ aluno_id: alunoId })
+                            }
+                        );
+
+                        if (response.ok) {
+                            alert('Reserva realizada com sucesso!');
+                            modalReserva.hide();
+                            carregarTurmas();
+                        } else {
+                            const erro = await response.json();
+                            alert(erro.erro || 'Erro ao realizar reserva');
+                        }
+                    } catch (erro) {
+                        console.error('Erro:', erro);
+                        alert('Erro ao processar reserva');
+                    }
+                });
+
+            // Inicialização
+            await carregarProfessores();
+            await carregarTurmas();
+            
+            // Atualiza quando filtros mudarem
+            document.getElementById('filtroProfessor')
+                .addEventListener('change', carregarTurmas);
+            document.getElementById('filtroModalidade')
+                .addEventListener('change', carregarTurmas);
+        });
+    </script>
+</body>
+</html> 

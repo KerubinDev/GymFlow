@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinos - Sistema Academia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    <style>
+        .exercicio-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .exercicio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .exercicio-detalhes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2>Treinos</h2>
+                <div>
+                    <select class="form-select d-inline-block w-auto me-2" id="selectAluno">
+                        <option value="">Selecione o aluno</option>
+                    </select>
+                    <button class="btn btn-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalNovoExercicio">
+                        Adicionar Exercício
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div id="listaTreinos">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo/Editar Exercício -->
+    <div class="modal fade" id="modalNovoExercicio" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Exercício</h5>
+                    <button type="button" 
+                            class="btn-close" 
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formExercicio">
+                        <input type="hidden" id="exercicioId">
+                        <div class="mb-3">
+                            <label for="exercicio" class="form-label">Exercício</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="exercicio" 
+                                   required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="series" class="form-label">Séries</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="series" 
+                                       min="1" 
+                                       required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="repeticoes" class="form-label">Repetições</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="repeticoes" 
+                                       min="1" 
+                                       required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="carga" class="form-label">Carga (kg)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="carga" 
+                                       min="0" 
+                                       step="0.5" 
+                                       required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            id="btnSalvarExercicio">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const modalExercicio = new bootstrap.Modal(
+                document.getElementById('modalNovoExercicio')
+            );
+            let alunoSelecionado = null;
+
+            // Carrega lista de alunos
+            async function carregarAlunos() {
+                try {
+                    const response = await fetch('/alunos', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const alunos = await response.json();
+                    
+                    const select = document.getElementById('selectAluno');
+                    alunos.forEach(aluno => {
+                        const option = document.createElement('option');
+                        option.value = aluno.id;
+                        option.textContent = aluno.nome;
+                        select.appendChild(option);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar alunos:', erro);
+                }
+            }
+
+            // Carrega treinos do aluno
+            async function carregarTreinos(alunoId) {
+                if (!alunoId) {
+                    document.getElementById('listaTreinos').innerHTML = 
+                        '<p>Selecione um aluno para ver seus treinos</p>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/treinos?aluno_id=${alunoId}`, {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const treinos = await response.json();
+                    
+                    const lista = document.getElementById('listaTreinos');
+                    lista.innerHTML = '';
+                    
+                    treinos.forEach(treino => {
+                        const div = document.createElement('div');
+                        div.className = 'exercicio-card';
+                        div.innerHTML = `
+                            <div class="exercicio-header">
+                                <h5 class="mb-0">${treino.exercicio}</h5>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2"
+                                            onclick="editarExercicio(${treino.id})">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            onclick="excluirExercicio(${treino.id})">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="exercicio-detalhes">
+                                <div>
+                                    <small class="text-muted">Séries</small>
+                                    <div>${treino.series}</div>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Repetições</small>
+                                    <div>${treino.repeticoes}</div>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Carga</small>
+                                    <div>${treino.carga} kg</div>
+                                </div>
+                            </div>
+                        `;
+                        lista.appendChild(div);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar treinos:', erro);
+                }
+            }
+
+            // Salva exercício
+            document.getElementById('btnSalvarExercicio')
+                .addEventListener('click', async function() {
+                    const exercicioId = document.getElementById('exercicioId').value;
+                    const dados = {
+                        aluno_id: alunoSelecionado,
+                        exercicio: document.getElementById('exercicio').value,
+                        series: parseInt(document.getElementById('series').value),
+                        repeticoes: parseInt(document.getElementById('repeticoes').value),
+                        carga: parseFloat(document.getElementById('carga').value)
+                    };
+
+                    try {
+                        const url = exercicioId ? 
+                            `/treinos/${exercicioId}` : '/treinos';
+                        const method = exercicioId ? 'PUT' : 'POST';
+                        
+                        const response = await fetch(url, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            },
+                            body: JSON.stringify(dados)
+                        });
+
+                        if (response.ok) {
+                            alert('Exercício salvo com sucesso!');
+                            modalExercicio.hide();
+                            carregarTreinos(alunoSelecionado);
+                        } else {
+                            const erro = await response.json();
+                            alert(erro.erro || 'Erro ao salvar exercício');
+                        }
+                    } catch (erro) {
+                        console.error('Erro:', erro);
+                        alert('Erro ao processar requisição');
+                    }
+                });
+
+            // Evento de mudança de aluno
+            document.getElementById('selectAluno')
+                .addEventListener('change', function(e) {
+                    alunoSelecionado = e.target.value;
+                    carregarTreinos(alunoSelecionado);
+                });
+
+            // Inicialização
+            await carregarAlunos();
+        });
+
+        // Funções globais para edição e exclusão
+        async function editarExercicio(id) {
+            try {
+                const response = await fetch(`/treinos/${id}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const treino = await response.json();
+                
+                document.getElementById('exercicioId').value = treino.id;
+                document.getElementById('exercicio').value = treino.exercicio;
+                document.getElementById('series').value = treino.series;
+                document.getElementById('repeticoes').value = treino.repeticoes;
+                document.getElementById('carga').value = treino.carga;
+                
+                new bootstrap.Modal(document.getElementById('modalNovoExercicio')).show();
+            } catch (erro) {
+                console.error('Erro:', erro);
+                alert('Erro ao carregar exercício');
+            }
+        }
+
+        async function excluirExercicio(id) {
+            if (!confirm('Deseja realmente excluir este exercício?')) return;
+            
+            try {
+                const response = await fetch(`/treinos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Exercício excluído com sucesso!');
+                    const alunoId = document.getElementById('selectAluno').value;
+                    carregarTreinos(alunoId);
+                } else {
+                    const erro = await response.json();
+                    alert(erro.erro || 'Erro ao excluir exercício');
+                }
+            } catch (erro) {
+                console.error('Erro:', erro);
+                alert('Erro ao processar exclusão');
+            }
+        }
+    </script>
+</body>
+</html> 

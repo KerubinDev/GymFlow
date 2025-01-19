@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pagamentos - Sistema Academia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2>Gestão de Pagamentos</h2>
+                <button class="btn btn-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalNovoPagamento">
+                    Registrar Pagamento
+                </button>
+            </div>
+            
+            <div class="card-body">
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="filtroAluno" class="form-label">Aluno</label>
+                        <select class="form-select" id="filtroAluno">
+                            <option value="">Todos os alunos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dataInicio" class="form-label">Data Início</label>
+                        <input type="date" class="form-control" id="dataInicio">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dataFim" class="form-label">Data Fim</label>
+                        <input type="date" class="form-control" id="dataFim">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-secondary w-100" id="btnFiltrar">
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabela de Pagamentos -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPagamentos">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Pagamento -->
+    <div class="modal fade" id="modalNovoPagamento" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Pagamento</h5>
+                    <button type="button" 
+                            class="btn-close" 
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovoPagamento">
+                        <div class="mb-3">
+                            <label for="alunoId" class="form-label">Aluno</label>
+                            <select class="form-select" id="alunoId" required>
+                                <option value="">Selecione o aluno</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="valor" class="form-label">Valor</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="valor" 
+                                   step="0.01" 
+                                   required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            id="btnSalvarPagamento">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const modalNovoPagamento = new bootstrap.Modal(
+                document.getElementById('modalNovoPagamento')
+            );
+            
+            // Carrega lista de alunos para os selects
+            async function carregarAlunos() {
+                try {
+                    const response = await fetch('/alunos', {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const alunos = await response.json();
+                    
+                    const selectAlunos = [
+                        document.getElementById('filtroAluno'),
+                        document.getElementById('alunoId')
+                    ];
+                    
+                    selectAlunos.forEach(select => {
+                        alunos.forEach(aluno => {
+                            const option = document.createElement('option');
+                            option.value = aluno.id;
+                            option.textContent = aluno.nome;
+                            select.appendChild(option);
+                        });
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar alunos:', erro);
+                }
+            }
+
+            // Carrega pagamentos com filtros
+            async function carregarPagamentos() {
+                const alunoId = document.getElementById('filtroAluno').value;
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                
+                let url = '/pagamentos/filtrar?';
+                if (alunoId) url += `aluno_id=${alunoId}&`;
+                if (dataInicio) url += `data_inicio=${dataInicio}&`;
+                if (dataFim) url += `data_fim=${dataFim}`;
+                
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const pagamentos = await response.json();
+                    
+                    const tbody = document.getElementById('tabelaPagamentos');
+                    tbody.innerHTML = '';
+                    
+                    pagamentos.forEach(pagamento => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${pagamento.aluno_nome}</td>
+                            <td>${new Date(pagamento.data_pagamento)
+                                .toLocaleDateString()}</td>
+                            <td>R$ ${pagamento.valor.toFixed(2)}</td>
+                            <td>
+                                <span class="badge bg-${pagamento.status === 'pago' ? 
+                                    'success' : 'warning'}">
+                                    ${pagamento.status}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" 
+                                        onclick="visualizarComprovante(${
+                                            pagamento.id})">
+                                    Ver comprovante
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar pagamentos:', erro);
+                }
+            }
+
+            // Registra novo pagamento
+            document.getElementById('btnSalvarPagamento')
+                .addEventListener('click', async function() {
+                    const dados = {
+                        aluno_id: document.getElementById('alunoId').value,
+                        valor: parseFloat(document.getElementById('valor').value)
+                    };
+
+                    try {
+                        const response = await fetch('/pagamentos', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            },
+                            body: JSON.stringify(dados)
+                        });
+
+                        if (response.ok) {
+                            alert('Pagamento registrado com sucesso!');
+                            modalNovoPagamento.hide();
+                            carregarPagamentos();
+                        } else {
+                            const erro = await response.json();
+                            alert(erro.erro || 'Erro ao registrar pagamento');
+                        }
+                    } catch (erro) {
+                        console.error('Erro:', erro);
+                        alert('Erro ao processar pagamento');
+                    }
+                });
+
+            // Filtrar pagamentos
+            document.getElementById('btnFiltrar')
+                .addEventListener('click', carregarPagamentos);
+
+            // Inicialização
+            await carregarAlunos();
+            await carregarPagamentos();
+        });
+
+        // Função para visualizar comprovante
+        function visualizarComprovante(pagamentoId) {
+            // Implementar visualização do comprovante
+            alert('Funcionalidade em desenvolvimento');
+        }
+    </script>
+</body>
+</html> 
