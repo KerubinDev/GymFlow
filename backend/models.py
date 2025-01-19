@@ -1,3 +1,5 @@
+"""Modelos do sistema GymFlow."""
+
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -15,16 +17,46 @@ class Usuario(db.Model, UserMixin):
     id: int = db.Column(db.Integer, primary_key=True)
     nome: str = db.Column(db.String(100), nullable=False)
     email: str = db.Column(db.String(120), unique=True, nullable=False)
-    _senha: str = db.Column('senha', db.String(255), nullable=False)
-    tipo: str = db.Column(db.String(20), nullable=False)
+    _senha_hash: str = db.Column(db.String(128), nullable=False)
+    tipo: str = db.Column(
+        db.Enum('gerente', 'professor', 'recepcionista', name='tipo_usuario'),
+        nullable=False
+    )
+    status: str = db.Column(
+        db.Enum('ativo', 'inativo', name='status_usuario'),
+        default='ativo',
+        nullable=False
+    )
+    foto_url: str = db.Column(db.String(200))
+    data_criacao: datetime = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao: datetime = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
     
-    def set_senha(self, senha: str) -> None:
-        """Define a senha criptografada do usuário."""
-        self._senha = generate_password_hash(senha)
+    # Relacionamentos
+    turmas = db.relationship('Turma', backref='professor', lazy=True)
+    treinos = db.relationship('Treino', backref='professor', lazy=True)
+    
+    @property
+    def senha(self) -> str:
+        """Impede acesso direto à senha."""
+        raise AttributeError('senha não é um atributo legível')
+    
+    @senha.setter
+    def senha(self, senha: str) -> None:
+        """Define a senha do usuário."""
+        self._senha_hash = generate_password_hash(senha)
     
     def verificar_senha(self, senha: str) -> bool:
         """Verifica se a senha está correta."""
-        return check_password_hash(self._senha, senha)
+        return check_password_hash(self._senha_hash, senha)
     
     def gerar_token(self) -> str:
         """Gera um token JWT para o usuário."""
@@ -40,7 +72,11 @@ class Usuario(db.Model, UserMixin):
             'id': self.id,
             'nome': self.nome,
             'email': self.email,
-            'tipo': self.tipo
+            'tipo': self.tipo,
+            'status': self.status,
+            'foto_url': self.foto_url,
+            'data_criacao': self.data_criacao.isoformat(),
+            'ultima_atualizacao': self.ultima_atualizacao.isoformat()
         }
     
     def get_id(self):
@@ -69,122 +105,85 @@ class Aluno(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    telefone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    cpf = db.Column(db.String(14), unique=True, nullable=False)
+    telefone = db.Column(db.String(20))
     data_nascimento = db.Column(db.Date, nullable=False)
-    plano_id = db.Column(db.Integer, db.ForeignKey('planos.id'), nullable=False)
-    status = db.Column(db.String(20), default='ativo')
+    endereco = db.Column(db.String(200))
+    foto_url = db.Column(db.String(200))
+    altura = db.Column(db.Float)  # em metros
+    peso = db.Column(db.Float)    # em kg
+    objetivo = db.Column(
+        db.Enum(
+            'hipertrofia',
+            'emagrecimento',
+            'condicionamento',
+            'reabilitacao',
+            name='objetivo_aluno'
+        )
+    )
+    observacoes = db.Column(db.Text)
+    status = db.Column(
+        db.Enum('ativo', 'inativo', 'pendente', name='status_aluno'),
+        default='ativo',
+        nullable=False
+    )
+    data_matricula = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
     
     # Relacionamentos
-    plano = db.relationship('Plano', backref='alunos')
-    pagamentos = db.relationship('Pagamento', backref='aluno', lazy=True)
+    plano_id = db.Column(
+        db.Integer,
+        db.ForeignKey('planos.id'),
+        nullable=False
+    )
     treinos = db.relationship('Treino', backref='aluno', lazy=True)
-    turmas = db.relationship('Turma', secondary='alunos_turmas', backref='alunos')
-    
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'telefone': self.telefone,
-            'data_nascimento': self.data_nascimento.isoformat(),
-            'plano_id': self.plano_id,
-            'plano_nome': self.plano.nome,
-            'status': self.status
-        }
+    pagamentos = db.relationship('Pagamento', backref='aluno', lazy=True)
+    matriculas_turmas = db.relationship(
+        'MatriculaTurma',
+        backref='aluno',
+        lazy=True
+    )
 
 
 class Plano(db.Model):
-    """Modelo para planos disponíveis."""
+    """Modelo para planos da academia."""
     __tablename__ = 'planos'
     
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(50), nullable=False)
-    valor = db.Column(db.Float, nullable=False)
-    duracao = db.Column(db.Integer, nullable=False)  # em meses
-    
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'valor': self.valor,
-            'duracao': self.duracao
-        }
-
-
-class Pagamento(db.Model):
-    """Modelo para pagamentos dos alunos."""
-    __tablename__ = 'pagamentos'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    aluno_id = db.Column(db.Integer, db.ForeignKey('alunos.id'), nullable=False)
-    data_pagamento = db.Column(db.DateTime, default=datetime.utcnow)
-    valor = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default='pendente')
-    
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'aluno_id': self.aluno_id,
-            'aluno_nome': self.aluno.nome,
-            'data_pagamento': self.data_pagamento.isoformat(),
-            'valor': self.valor,
-            'status': self.status
-        }
-
-
-class Professor(db.Model):
-    """Modelo para professores da academia."""
-    __tablename__ = 'professores'
-    
-    id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    especialidade = db.Column(db.String(50), nullable=False)
-    horario_disponivel = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text)
+    valor = db.Column(db.Float, nullable=False)
+    duracao_meses = db.Column(db.Integer, nullable=False)
+    modalidades = db.Column(db.String(200))  # Lista de modalidades separadas por vírgula
+    status = db.Column(
+        db.Enum('ativo', 'inativo', name='status_plano'),
+        default='ativo',
+        nullable=False
+    )
+    data_criacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
     
     # Relacionamentos
-    turmas = db.relationship('Turma', backref='professor', lazy=True)
-    
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'especialidade': self.especialidade,
-            'horario_disponivel': self.horario_disponivel
-        }
-
-
-class Turma(db.Model):
-    """Modelo para turmas da academia."""
-    __tablename__ = 'turmas'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    professor_id = db.Column(db.Integer, db.ForeignKey('professores.id'), 
-                           nullable=False)
-    nome = db.Column(db.String(50), nullable=False)
-    horario = db.Column(db.String(50), nullable=False)
-    capacidade = db.Column(db.Integer, nullable=False)
-    
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'professor_id': self.professor_id,
-            'professor_nome': self.professor.nome,
-            'nome': self.nome,
-            'horario': self.horario,
-            'capacidade': self.capacidade,
-            'alunos_count': len(self.alunos)
-        }
-
-
-# Tabela de associação entre alunos e turmas
-alunos_turmas = db.Table('alunos_turmas',
-    db.Column('aluno_id', db.Integer, db.ForeignKey('alunos.id'), primary_key=True),
-    db.Column('turma_id', db.Integer, db.ForeignKey('turmas.id'), primary_key=True)
-)
+    alunos = db.relationship('Aluno', backref='plano', lazy=True)
 
 
 class Treino(db.Model):
@@ -192,22 +191,223 @@ class Treino(db.Model):
     __tablename__ = 'treinos'
     
     id = db.Column(db.Integer, primary_key=True)
-    aluno_id = db.Column(db.Integer, db.ForeignKey('alunos.id'), nullable=False)
-    exercicio = db.Column(db.String(100), nullable=False)
+    aluno_id = db.Column(
+        db.Integer,
+        db.ForeignKey('alunos.id'),
+        nullable=False
+    )
+    professor_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuarios.id'),
+        nullable=False
+    )
+    tipo = db.Column(
+        db.Enum(
+            'musculacao',
+            'cardio',
+            'funcional',
+            name='tipo_treino'
+        ),
+        nullable=False
+    )
+    observacoes = db.Column(db.Text)
+    status = db.Column(
+        db.Enum('ativo', 'inativo', name='status_treino'),
+        default='ativo',
+        nullable=False
+    )
+    data_criacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+    
+    # Relacionamentos
+    exercicios = db.relationship('Exercicio', backref='treino', lazy=True)
+
+
+class Exercicio(db.Model):
+    """Modelo para exercícios dos treinos."""
+    __tablename__ = 'exercicios'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    treino_id = db.Column(
+        db.Integer,
+        db.ForeignKey('treinos.id'),
+        nullable=False
+    )
+    nome = db.Column(db.String(100), nullable=False)
     series = db.Column(db.Integer, nullable=False)
     repeticoes = db.Column(db.Integer, nullable=False)
-    carga = db.Column(db.Float, nullable=False)
+    carga = db.Column(db.Float)  # em kg
+    observacoes = db.Column(db.Text)
+    ordem = db.Column(db.Integer, nullable=False)
+
+
+class Turma(db.Model):
+    """Modelo para turmas da academia."""
+    __tablename__ = 'turmas'
     
-    def to_dict(self):
-        """Converte o objeto para dicionário."""
-        return {
-            'id': self.id,
-            'aluno_id': self.aluno_id,
-            'exercicio': self.exercicio,
-            'series': self.series,
-            'repeticoes': self.repeticoes,
-            'carga': self.carga
-        }
+    id = db.Column(db.Integer, primary_key=True)
+    professor_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuarios.id'),
+        nullable=False
+    )
+    modalidade = db.Column(
+        db.Enum(
+            'musculacao',
+            'crossfit',
+            'pilates',
+            'yoga',
+            'funcional',
+            name='modalidade_turma'
+        ),
+        nullable=False
+    )
+    nivel = db.Column(
+        db.Enum(
+            'iniciante',
+            'intermediario',
+            'avancado',
+            name='nivel_turma'
+        ),
+        nullable=False
+    )
+    dia_semana = db.Column(db.Integer, nullable=False)  # 0-6 (domingo-sábado)
+    horario_inicio = db.Column(db.Time, nullable=False)
+    horario_fim = db.Column(db.Time, nullable=False)
+    capacidade_maxima = db.Column(db.Integer, nullable=False)
+    descricao = db.Column(db.Text)
+    status = db.Column(
+        db.Enum('ativa', 'inativa', name='status_turma'),
+        default='ativa',
+        nullable=False
+    )
+    data_criacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+    
+    # Relacionamentos
+    matriculas = db.relationship(
+        'MatriculaTurma',
+        backref='turma',
+        lazy=True
+    )
+
+
+class MatriculaTurma(db.Model):
+    """Modelo para matrículas de alunos em turmas."""
+    __tablename__ = 'matriculas_turmas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    aluno_id = db.Column(
+        db.Integer,
+        db.ForeignKey('alunos.id'),
+        nullable=False
+    )
+    turma_id = db.Column(
+        db.Integer,
+        db.ForeignKey('turmas.id'),
+        nullable=False
+    )
+    data_matricula = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    status = db.Column(
+        db.Enum('ativa', 'inativa', name='status_matricula'),
+        default='ativa',
+        nullable=False
+    )
+
+
+class Pagamento(db.Model):
+    """Modelo para pagamentos dos alunos."""
+    __tablename__ = 'pagamentos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    aluno_id = db.Column(
+        db.Integer,
+        db.ForeignKey('alunos.id'),
+        nullable=False
+    )
+    valor = db.Column(db.Float, nullable=False)
+    data_pagamento = db.Column(db.DateTime, nullable=False)
+    forma_pagamento = db.Column(
+        db.Enum(
+            'dinheiro',
+            'cartao_credito',
+            'cartao_debito',
+            'pix',
+            'transferencia',
+            name='forma_pagamento'
+        ),
+        nullable=False
+    )
+    status = db.Column(
+        db.Enum(
+            'pago',
+            'pendente',
+            'vencido',
+            'cancelado',
+            name='status_pagamento'
+        ),
+        default='pendente',
+        nullable=False
+    )
+    observacoes = db.Column(db.Text)
+    data_criacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    ultima_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+
+class Presenca(db.Model):
+    """Modelo para controle de presença dos alunos."""
+    __tablename__ = 'presencas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    aluno_id = db.Column(
+        db.Integer,
+        db.ForeignKey('alunos.id'),
+        nullable=False
+    )
+    turma_id = db.Column(
+        db.Integer,
+        db.ForeignKey('turmas.id')
+    )
+    data_hora = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+    tipo = db.Column(
+        db.Enum('entrada', 'saida', name='tipo_presenca'),
+        nullable=False
+    )
 
 
 def init_db():
@@ -226,10 +426,10 @@ def init_db():
         
         # Cria planos básicos
         planos = [
-            Plano(nome='Mensal', valor=100.0, duracao=1),
-            Plano(nome='Trimestral', valor=270.0, duracao=3),
-            Plano(nome='Semestral', valor=510.0, duracao=6),
-            Plano(nome='Anual', valor=960.0, duracao=12)
+            Plano(nome='Mensal', valor=100.0, duracao_meses=1),
+            Plano(nome='Trimestral', valor=270.0, duracao_meses=3),
+            Plano(nome='Semestral', valor=510.0, duracao_meses=6),
+            Plano(nome='Anual', valor=960.0, duracao_meses=12)
         ]
         for plano in planos:
             db.session.add(plano)

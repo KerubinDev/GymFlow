@@ -1,246 +1,467 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Pagamentos - Sistema Academia</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
-          rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2>Gestão de Pagamentos</h2>
-                <button class="btn btn-primary" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#modalNovoPagamento">
-                    Registrar Pagamento
-                </button>
+{% extends "base.html" %}
+
+{% block title %}Pagamentos - GymFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        background-color: transparent;
+        border-bottom: none;
+        padding: 20px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .pagamento-item {
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .pagamento-item:hover {
+        background-color: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 5px 10px;
+    }
+    
+    .btn-acao {
+        padding: 5px 10px;
+        font-size: 0.875rem;
+    }
+    
+    .filtro-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .resumo-card {
+        background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .resumo-valor {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .resumo-label {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestão de Pagamentos</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoPagamento">
+            <i class="bi bi-plus-lg"></i> Novo Pagamento
+        </button>
+    </div>
+    
+    <!-- Resumo Financeiro -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="resumo-card">
+                <div class="resumo-valor" id="totalRecebido">R$ 0,00</div>
+                <div class="resumo-label">Total Recebido (Mês)</div>
             </div>
-            
-            <div class="card-body">
-                <!-- Filtros -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <label for="filtroAluno" class="form-label">Aluno</label>
-                        <select class="form-select" id="filtroAluno">
-                            <option value="">Todos os alunos</option>
+        </div>
+        <div class="col-md-3">
+            <div class="resumo-card">
+                <div class="resumo-valor" id="totalPendente">R$ 0,00</div>
+                <div class="resumo-label">Total Pendente</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="resumo-card">
+                <div class="resumo-valor" id="totalVencido">R$ 0,00</div>
+                <div class="resumo-label">Total Vencido</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="resumo-card">
+                <div class="resumo-valor" id="taxaInadimplencia">0%</div>
+                <div class="resumo-label">Taxa de Inadimplência</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filtro-container">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="filtroAluno" class="form-label">Aluno</label>
+                <input type="text" class="form-control" id="filtroAluno" 
+                       placeholder="Buscar por nome">
+            </div>
+            <div class="col-md-3">
+                <label for="filtroStatus" class="form-label">Status</label>
+                <select class="form-select" id="filtroStatus">
+                    <option value="">Todos</option>
+                    <option value="pago">Pago</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="vencido">Vencido</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtroDataInicio" class="form-label">Data Início</label>
+                <input type="date" class="form-control" id="filtroDataInicio">
+            </div>
+            <div class="col-md-3">
+                <label for="filtroDataFim" class="form-label">Data Fim</label>
+                <input type="date" class="form-control" id="filtroDataFim">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de Pagamentos -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="listaPagamentos">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Pagamento -->
+<div class="modal fade" id="modalNovoPagamento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Pagamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPagamento">
+                    <input type="hidden" id="pagamentoId">
+                    
+                    <div class="mb-3">
+                        <label for="alunoPagamento" class="form-label">Aluno</label>
+                        <select class="form-select" id="alunoPagamento" required>
+                            <option value="">Selecione um aluno</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="dataInicio" class="form-label">Data Início</label>
-                        <input type="date" class="form-control" id="dataInicio">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="dataFim" class="form-label">Data Fim</label>
-                        <input type="date" class="form-control" id="dataFim">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-secondary w-100" id="btnFiltrar">
-                            Filtrar
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Tabela de Pagamentos -->
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Aluno</th>
-                                <th>Data</th>
-                                <th>Valor</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaPagamentos">
-                            <!-- Preenchido via JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Novo Pagamento -->
-    <div class="modal fade" id="modalNovoPagamento" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Registrar Pagamento</h5>
-                    <button type="button" 
-                            class="btn-close" 
-                            data-bs-dismiss="modal">
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNovoPagamento">
-                        <div class="mb-3">
-                            <label for="alunoId" class="form-label">Aluno</label>
-                            <select class="form-select" id="alunoId" required>
-                                <option value="">Selecione o aluno</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="valor" class="form-label">Valor</label>
+                    
+                    <div class="mb-3">
+                        <label for="valorPagamento" class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
                             <input type="number" 
                                    class="form-control" 
-                                   id="valor" 
+                                   id="valorPagamento" 
                                    step="0.01" 
+                                   min="0" 
                                    required>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" 
-                            class="btn btn-secondary" 
-                            data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    <button type="button" 
-                            class="btn btn-primary" 
-                            id="btnSalvarPagamento">
-                        Salvar
-                    </button>
-                </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dataPagamento" class="form-label">Data do Pagamento</label>
+                        <input type="date" class="form-control" id="dataPagamento" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
+                        <select class="form-select" id="formaPagamento" required>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="cartao_debito">Cartão de Débito</option>
+                            <option value="pix">PIX</option>
+                            <option value="transferencia">Transferência Bancária</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="statusPagamento" class="form-label">Status</label>
+                        <select class="form-select" id="statusPagamento" required>
+                            <option value="pago">Pago</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="observacoesPagamento" class="form-label">Observações</label>
+                        <textarea class="form-control" 
+                                  id="observacoesPagamento" 
+                                  rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSalvarPagamento">
+                    Salvar
+                </button>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            const modalNovoPagamento = new bootstrap.Modal(
-                document.getElementById('modalNovoPagamento')
-            );
-            
-            // Carrega lista de alunos para os selects
-            async function carregarAlunos() {
-                try {
-                    const response = await fetch('/alunos', {
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
-                        }
-                    });
-                    const alunos = await response.json();
-                    
-                    const selectAlunos = [
-                        document.getElementById('filtroAluno'),
-                        document.getElementById('alunoId')
-                    ];
-                    
-                    selectAlunos.forEach(select => {
-                        alunos.forEach(aluno => {
-                            const option = document.createElement('option');
-                            option.value = aluno.id;
-                            option.textContent = aluno.nome;
-                            select.appendChild(option);
-                        });
-                    });
-                } catch (erro) {
-                    console.error('Erro ao carregar alunos:', erro);
-                }
-            }
-
-            // Carrega pagamentos com filtros
-            async function carregarPagamentos() {
-                const alunoId = document.getElementById('filtroAluno').value;
-                const dataInicio = document.getElementById('dataInicio').value;
-                const dataFim = document.getElementById('dataFim').value;
-                
-                let url = '/pagamentos/filtrar?';
-                if (alunoId) url += `aluno_id=${alunoId}&`;
-                if (dataInicio) url += `data_inicio=${dataInicio}&`;
-                if (dataFim) url += `data_fim=${dataFim}`;
-                
-                try {
-                    const response = await fetch(url, {
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
-                        }
-                    });
-                    const pagamentos = await response.json();
-                    
-                    const tbody = document.getElementById('tabelaPagamentos');
-                    tbody.innerHTML = '';
-                    
-                    pagamentos.forEach(pagamento => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${pagamento.aluno_nome}</td>
-                            <td>${new Date(pagamento.data_pagamento)
-                                .toLocaleDateString()}</td>
-                            <td>R$ ${pagamento.valor.toFixed(2)}</td>
-                            <td>
-                                <span class="badge bg-${pagamento.status === 'pago' ? 
-                                    'success' : 'warning'}">
-                                    ${pagamento.status}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-info" 
-                                        onclick="visualizarComprovante(${
-                                            pagamento.id})">
-                                    Ver comprovante
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                } catch (erro) {
-                    console.error('Erro ao carregar pagamentos:', erro);
-                }
-            }
-
-            // Registra novo pagamento
-            document.getElementById('btnSalvarPagamento')
-                .addEventListener('click', async function() {
-                    const dados = {
-                        aluno_id: document.getElementById('alunoId').value,
-                        valor: parseFloat(document.getElementById('valor').value)
-                    };
-
-                    try {
-                        const response = await fetch('/pagamentos', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            },
-                            body: JSON.stringify(dados)
-                        });
-
-                        if (response.ok) {
-                            alert('Pagamento registrado com sucesso!');
-                            modalNovoPagamento.hide();
-                            carregarPagamentos();
-                        } else {
-                            const erro = await response.json();
-                            alert(erro.erro || 'Erro ao registrar pagamento');
-                        }
-                    } catch (erro) {
-                        console.error('Erro:', erro);
-                        alert('Erro ao processar pagamento');
-                    }
-                });
-
-            // Filtrar pagamentos
-            document.getElementById('btnFiltrar')
-                .addEventListener('click', carregarPagamentos);
-
-            // Inicialização
-            await carregarAlunos();
-            await carregarPagamentos();
-        });
-
-        // Função para visualizar comprovante
-        function visualizarComprovante(pagamentoId) {
-            // Implementar visualização do comprovante
-            alert('Funcionalidade em desenvolvimento');
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalNovoPagamento = new bootstrap.Modal(
+            document.getElementById('modalNovoPagamento')
+        );
+        
+        // Formatar valores monetários
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
         }
-    </script>
-</body>
-</html> 
+        
+        // Carregar alunos
+        async function carregarAlunos() {
+            try {
+                const response = await fetch('/alunos');
+                const alunos = await response.json();
+                
+                const selectAluno = document.getElementById('alunoPagamento');
+                alunos.forEach(aluno => {
+                    const option = document.createElement('option');
+                    option.value = aluno.id;
+                    option.textContent = aluno.nome;
+                    selectAluno.appendChild(option);
+                });
+            } catch (erro) {
+                console.error('Erro ao carregar alunos:', erro);
+            }
+        }
+        
+        // Carregar resumo financeiro
+        async function carregarResumo() {
+            try {
+                const response = await fetch('/pagamentos/resumo');
+                const resumo = await response.json();
+                
+                document.getElementById('totalRecebido').textContent = 
+                    formatarMoeda(resumo.total_recebido);
+                document.getElementById('totalPendente').textContent = 
+                    formatarMoeda(resumo.total_pendente);
+                document.getElementById('totalVencido').textContent = 
+                    formatarMoeda(resumo.total_vencido);
+                document.getElementById('taxaInadimplencia').textContent = 
+                    `${resumo.taxa_inadimplencia.toFixed(1)}%`;
+            } catch (erro) {
+                console.error('Erro ao carregar resumo:', erro);
+            }
+        }
+        
+        // Carregar pagamentos
+        async function carregarPagamentos() {
+            try {
+                const filtros = {
+                    aluno: document.getElementById('filtroAluno').value,
+                    status: document.getElementById('filtroStatus').value,
+                    data_inicio: document.getElementById('filtroDataInicio').value,
+                    data_fim: document.getElementById('filtroDataFim').value
+                };
+                
+                const queryString = new URLSearchParams(filtros).toString();
+                const response = await fetch(`/pagamentos?${queryString}`);
+                const pagamentos = await response.json();
+                
+                const listaPagamentos = document.getElementById('listaPagamentos');
+                listaPagamentos.innerHTML = '';
+                
+                pagamentos.forEach(pagamento => {
+                    const div = document.createElement('div');
+                    div.className = 'pagamento-item';
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-1">${pagamento.aluno.nome}</h5>
+                                <p class="mb-1">
+                                    <span class="badge bg-${
+                                        pagamento.status === 'pago' ? 'success' : 
+                                        pagamento.status === 'pendente' ? 'warning' : 
+                                        pagamento.status === 'vencido' ? 'danger' : 'secondary'
+                                    } status-badge">
+                                        ${pagamento.status}
+                                    </span>
+                                    <small class="text-muted ms-2">
+                                        Valor: ${formatarMoeda(pagamento.valor)}
+                                    </small>
+                                    <small class="text-muted ms-2">
+                                        Data: ${new Date(pagamento.data_pagamento).toLocaleDateString()}
+                                    </small>
+                                </p>
+                                <small class="text-muted">
+                                    Forma: ${pagamento.forma_pagamento} | 
+                                    ${pagamento.observacoes || 'Sem observações'}
+                                </small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary btn-acao me-2"
+                                        onclick="editarPagamento(${pagamento.id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-acao"
+                                        onclick="excluirPagamento(${pagamento.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    listaPagamentos.appendChild(div);
+                });
+            } catch (erro) {
+                console.error('Erro ao carregar pagamentos:', erro);
+            }
+        }
+        
+        // Salvar pagamento
+        async function salvarPagamento() {
+            const dados = {
+                aluno_id: document.getElementById('alunoPagamento').value,
+                valor: parseFloat(document.getElementById('valorPagamento').value),
+                data_pagamento: document.getElementById('dataPagamento').value,
+                forma_pagamento: document.getElementById('formaPagamento').value,
+                status: document.getElementById('statusPagamento').value,
+                observacoes: document.getElementById('observacoesPagamento').value
+            };
+            
+            const pagamentoId = document.getElementById('pagamentoId').value;
+            const method = pagamentoId ? 'PUT' : 'POST';
+            const url = pagamentoId ? `/pagamentos/${pagamentoId}` : '/pagamentos';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+                
+                if (response.ok) {
+                    alert('Pagamento salvo com sucesso!');
+                    modalNovoPagamento.hide();
+                    carregarPagamentos();
+                    carregarResumo();
+                } else {
+                    const erro = await response.json();
+                    alert(erro.erro || 'Erro ao salvar pagamento');
+                }
+            } catch (erro) {
+                console.error('Erro ao salvar pagamento:', erro);
+                alert('Erro ao salvar pagamento');
+            }
+        }
+        
+        // Event Listeners
+        document.getElementById('btnSalvarPagamento').addEventListener('click', salvarPagamento);
+        
+        // Filtros
+        ['filtroAluno', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim'].forEach(id => {
+            const elemento = document.getElementById(id);
+            if (id === 'filtroAluno') {
+                elemento.addEventListener('input', debounce(carregarPagamentos, 300));
+            } else {
+                elemento.addEventListener('change', carregarPagamentos);
+            }
+        });
+        
+        // Inicialização
+        carregarAlunos();
+        carregarResumo();
+        carregarPagamentos();
+        
+        // Definir data atual como padrão para novo pagamento
+        document.getElementById('dataPagamento').valueAsDate = new Date();
+    });
+    
+    // Função de debounce
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Funções globais
+    async function editarPagamento(id) {
+        try {
+            const response = await fetch(`/pagamentos/${id}`);
+            const pagamento = await response.json();
+            
+            document.getElementById('pagamentoId').value = pagamento.id;
+            document.getElementById('alunoPagamento').value = pagamento.aluno_id;
+            document.getElementById('valorPagamento').value = pagamento.valor;
+            document.getElementById('dataPagamento').value = pagamento.data_pagamento;
+            document.getElementById('formaPagamento').value = pagamento.forma_pagamento;
+            document.getElementById('statusPagamento').value = pagamento.status;
+            document.getElementById('observacoesPagamento').value = pagamento.observacoes;
+            
+            document.querySelector('#modalNovoPagamento .modal-title').textContent = 
+                'Editar Pagamento';
+            new bootstrap.Modal(document.getElementById('modalNovoPagamento')).show();
+        } catch (erro) {
+            console.error('Erro ao carregar pagamento:', erro);
+            alert('Erro ao carregar dados do pagamento');
+        }
+    }
+    
+    async function excluirPagamento(id) {
+        if (confirm('Tem certeza que deseja excluir este pagamento?')) {
+            try {
+                const response = await fetch(`/pagamentos/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Pagamento excluído com sucesso!');
+                    carregarPagamentos();
+                    carregarResumo();
+                } else {
+                    const erro = await response.json();
+                    alert(erro.erro || 'Erro ao excluir pagamento');
+                }
+            } catch (erro) {
+                console.error('Erro ao excluir pagamento:', erro);
+                alert('Erro ao excluir pagamento');
+            }
+        }
+    }
+</script>
+{% endblock %} 
