@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, render_template, redirect, url_fo
 from .models import (Usuario, Aluno, Plano, Pagamento, Professor, 
                    Turma, Treino, db)
 from flask_login import login_required, current_user, login_user, logout_user
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Criação do Blueprint para organizar as rotas
 rotas = Blueprint('rotas', __name__)
@@ -69,7 +69,37 @@ def dashboard():
     """
     if current_user.tipo != 'gerente':
         return redirect(url_for('rotas.index'))
-    return render_template('dashboard.html')
+    
+    # Calcula métricas
+    metricas = {
+        'total_alunos': Aluno.query.filter_by(status='ativo').count(),
+        'receita_mensal': db.session.query(db.func.sum(Pagamento.valor)).\
+            filter(Pagamento.data_pagamento >= db.func.date_trunc('month', db.func.current_date())).\
+            scalar() or 0,
+        'novas_matriculas': Aluno.query.filter(
+            Aluno.data_criacao >= (datetime.now() - timedelta(days=30))
+        ).count(),
+        'presenca_diaria': 0,  # Implementar contagem de presenças
+        
+        # Dados para os gráficos
+        'labels_meses': [
+            'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+            'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+        ],
+        'valores_mensais': [0] * 12  # Implementar valores reais
+    }
+    
+    # Calcula valores mensais
+    ano_atual = datetime.now().year
+    for mes in range(12):
+        valor = db.session.query(db.func.sum(Pagamento.valor)).\
+            filter(
+                db.func.extract('year', Pagamento.data_pagamento) == ano_atual,
+                db.func.extract('month', Pagamento.data_pagamento) == mes + 1
+            ).scalar()
+        metricas['valores_mensais'][mes] = float(valor or 0)
+    
+    return render_template('dashboard.html', metricas=metricas)
 
 
 @rotas.route('/alunos')
