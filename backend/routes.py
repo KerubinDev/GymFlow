@@ -109,7 +109,7 @@ def dashboard():
             ).scalar()
         metricas['valores_mensais'][mes] = float(valor or 0)
     
-    return render_template('dashboard.html', metricas=metricas)
+    return render_template('dashboard.html', metricas=metricas, datetime=datetime)
 
 
 @rotas.route('/alunos')
