@@ -81,7 +81,7 @@ def dashboard():
             filter(Pagamento.data_pagamento >= primeiro_dia_mes).\
             scalar() or 0,
         'novas_matriculas': Aluno.query.filter(
-            Aluno.data_criacao >= (hoje - timedelta(days=30))
+            Aluno.data_matricula >= (hoje - timedelta(days=30))
         ).count(),
         'presenca_diaria': 0,  # Implementar contagem de presenças
         
