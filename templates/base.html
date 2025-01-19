@@ -100,11 +100,6 @@
                     </a>
                     {% endif %}
                     
-                    <a class="nav-link {% if request.endpoint == 'rotas.horarios' %}active{% endif %}" 
-                       href="{{ url_for('rotas.horarios') }}">
-                        <i class="bi bi-calendar3"></i> Horários
-                    </a>
-                    
                     {% if current_user.tipo == 'gerente' %}
                     <a class="nav-link {% if request.endpoint == 'rotas.usuarios' %}active{% endif %}" 
                        href="{{ url_for('rotas.usuarios') }}">
