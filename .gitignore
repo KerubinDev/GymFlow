@@ -168,4 +168,44 @@ tmp/
 .DS_Store
 node_modules/
 *.swp
-*.swo 
+*.swo
+
+# Arquivos temporários
+*.bak
+*.tmp
+*.temp
+.temp/
+tmp/
+
+# Arquivos de mídia e uploads
+media/
+
+# Arquivos de configuração local
+.env.local
+.env.*.local
+
+# Arquivos de cache
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambiente virtual
+venv/
+ENV/
+env/
+.env
+
+# IDEs e editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de log
+*.log 

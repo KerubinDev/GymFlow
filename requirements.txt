@@ -1,48 +1,62 @@
 # Framework Web
-Flask==2.3.3
-Werkzeug==2.3.7
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Extensões Flask
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Migrate==4.0.5
+Flask-WTF==1.2.1
+Flask-Mail==0.9.1
+Flask-Caching==2.1.0
+Flask-Talisman==1.1.0
 
 # Banco de Dados
-Flask-SQLAlchemy==3.1.1
-SQLAlchemy==2.0.21
-psycopg2-binary==2.9.7
-Flask-Migrate==4.0.5
-alembic==1.12.0
+SQLAlchemy==2.0.23
+alembic==1.13.1
+
+# Segurança
+python-dotenv==1.0.0
+bcrypt==4.1.2
+PyJWT==2.8.0
+
+# Processamento de Dados
+python-dateutil==2.8.2
+pytz==2023.3.post1
+
+# Validação
+email-validator==2.1.0.post1
+phonenumbers==8.13.26
+
+# Formatação
+Babel==2.14.0
+
+# Desenvolvimento
+python-dotenv==1.0.0
+black==23.12.1
+flake8==7.0.0
+isort==5.13.2
 
 # Autenticação e Segurança
-Flask-Login==0.6.2
 Flask-JWT-Extended==4.5.2
 Flask-Security-Too==5.3.0
-bcrypt==4.0.1
 passlib==1.7.4
 
 # Upload e Processamento de Imagens
 Pillow==10.0.1
 python-magic==0.4.27
 
-# Email
-Flask-Mail==0.9.1
-
 # Cache
-Flask-Caching==2.0.2
 redis==5.0.1
 
 # CORS e Headers
 Flask-CORS==4.0.0
-Flask-Talisman==1.1.0
 
 # Validação de Dados
 marshmallow==3.20.1
-Flask-WTF==1.1.1
 WTForms==3.0.1
-email-validator==2.0.0
-
-# Variáveis de Ambiente
-python-dotenv==1.0.0
 
 # Utilitários
-pytz==2023.3
-python-dateutil==2.8.2
 requests==2.31.0
 urllib3==2.0.5
 
@@ -54,11 +68,4 @@ pytest-flask==1.2.0
 # Produção
 gunicorn==21.2.0
 supervisor==4.2.5
-sentry-sdk[flask]==1.31.0
-
-# Desenvolvimento
-black==23.9.1
-flake8==6.1.0
-isort==5.12.0
-mypy==1.5.1
-pre-commit==3.4.0 
+sentry-sdk[flask]==1.31.0 

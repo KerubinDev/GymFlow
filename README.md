@@ -1,55 +1,47 @@
 # GymFlow - Sistema de Gestão para Academias
 
-O GymFlow é um sistema web completo para gestão de academias, desenvolvido com Python/Flask no backend e Bootstrap/JavaScript no frontend.
+Sistema completo para gestão de academias desenvolvido em Python/Flask, oferecendo funcionalidades para gerenciamento de alunos, professores, treinos, turmas e pagamentos.
 
 ## Funcionalidades
 
+- **Gestão de Usuários**
+  - Cadastro de gerentes, professores e recepcionistas
+  - Controle de acesso baseado em perfis
+  - Autenticação segura
+
 - **Gestão de Alunos**
-  - Cadastro e edição de alunos
-  - Controle de mensalidades
-  - Acompanhamento de medidas e objetivos
-  - Upload de fotos
+  - Cadastro completo com dados pessoais
+  - Histórico de treinos
+  - Controle de pagamentos
+  - Matrícula em turmas
 
 - **Gestão de Treinos**
-  - Criação e personalização de treinos
+  - Criação de treinos personalizados
+  - Biblioteca de exercícios
   - Acompanhamento de evolução
-  - Diferentes modalidades (musculação, cardio, etc.)
+  - Histórico de treinos
 
 - **Gestão de Turmas**
-  - Grade de horários
+  - Agendamento de aulas
   - Controle de capacidade
-  - Reserva de vagas
+  - Diferentes modalidades
+  - Lista de presença
 
 - **Gestão Financeira**
-  - Controle de pagamentos
-  - Relatórios de receitas
-  - Controle de inadimplência
-
-- **Gestão de Usuários**
-  - Diferentes níveis de acesso (gerente, professor, recepcionista)
-  - Controle de permissões
-  - Perfis personalizados
+  - Controle de mensalidades
+  - Histórico de pagamentos
+  - Relatórios financeiros
+  - Status de inadimplência
 
 ## Tecnologias Utilizadas
 
-- **Backend**
-  - Python 3.8+
-  - Flask
-  - SQLAlchemy
-  - Flask-Login
-  - Flask-JWT-Extended
-  - Pillow (para processamento de imagens)
-
-- **Frontend**
-  - HTML5
-  - CSS3
-  - JavaScript
-  - Bootstrap 5
-  - Chart.js (para gráficos)
-
-- **Banco de Dados**
-  - SQLite (desenvolvimento)
-  - PostgreSQL (produção)
+- Python 3.8+
+- Flask (Framework Web)
+- SQLAlchemy (ORM)
+- Flask-Login (Autenticação)
+- Bootstrap 5 (Frontend)
+- Chart.js (Gráficos)
+- SQLite (Banco de Dados)
 
 ## Instalação
 
@@ -63,7 +55,7 @@ cd gymflow
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+venv\\Scripts\\activate   # Windows
 ```
 
 3. Instale as dependências:
@@ -80,12 +72,15 @@ cp .env.example .env
 5. Inicialize o banco de dados:
 ```bash
 flask db upgrade
+python run.py
 ```
 
-6. Execute o servidor de desenvolvimento:
-```bash
-flask run
-```
+## Uso
+
+1. Acesse o sistema através do navegador: `http://localhost:5000`
+2. Faça login com as credenciais padrão:
+   - Email: admin@gymflow.com
+   - Senha: admin123
 
 ## Estrutura do Projeto
 
@@ -94,52 +89,22 @@ gymflow/
 ├── backend/
 │   ├── __init__.py
 │   ├── models.py
-│   ├── routes.py
-│   └── utils.py
-├── templates/
-│   ├── base.html
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── treinos.html
-│   ├── cadastro_alunos.html
-│   ├── gestao_pagamentos.html
-│   ├── horarios_turmas.html
-│   └── cadastro_usuarios.html
+│   └── routes.py
+├── migrations/
 ├── static/
 │   ├── css/
-│   ├── js/
-│   └── img/
-├── migrations/
-├── tests/
+│   └── js/
+├── templates/
+├── instance/
 ├── .env
 ├── .gitignore
-├── config.py
 ├── requirements.txt
 └── run.py
 ```
 
-## Configuração
-
-O arquivo `.env` deve conter as seguintes variáveis:
-
-```env
-FLASK_APP=run.py
-FLASK_ENV=development
-SECRET_KEY=sua-chave-secreta
-DATABASE_URL=sqlite:///gymflow.db
-UPLOAD_FOLDER=uploads
-```
-
-## Uso
-
-1. Acesse `http://localhost:5000` no navegador
-2. Faça login com as credenciais padrão:
-   - Email: admin@gymflow.com
-   - Senha: admin123
-
 ## Contribuição
 
-1. Fork o projeto
+1. Faça um Fork do projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
@@ -151,13 +116,13 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICE
 
 ## Contato
 
-Seu Nome - [@seutwitter](https://twitter.com/seutwitter) - email@exemplo.com
+Kelvin Moraes - kelvin.moraes117@gmail.com
 
-Link do Projeto: [https://github.com/seu-usuario/gymflow](https://github.com/seu-usuario/gymflow)
+Link do projeto: [https://github.com/seu-usuario/gymflow](https://github.com/seu-usuario/gymflow)
 
 ## Agradecimentos
 
 - [Bootstrap](https://getbootstrap.com)
-- [Flask](https://flask.palletsprojects.com)
 - [Chart.js](https://www.chartjs.org)
+- [Flask](https://flask.palletsprojects.com)
 - [Font Awesome](https://fontawesome.com)
