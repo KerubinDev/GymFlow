@@ -80,51 +80,57 @@ def logout():
 @login_required
 def dashboard():
     """
-    Exibe o dashboard administrativo
+    Rota para o dashboard principal
     """
-    if current_user.tipo != 'gerente':
+    if current_user.tipo not in ['gerente', 'recepcionista']:
         return redirect(url_for('rotas.index'))
     
-    # Calcula o primeiro dia do mês atual
-    hoje = datetime.now()
-    primeiro_dia_mes = datetime(hoje.year, hoje.month, 1)
+    hoje = datetime.now().date()
+    mes_atual = hoje.strftime('%Y-%m')
     
-    # Calcula métricas
+    # Métricas para o dashboard
     metricas = {
+        # Total de alunos ativos
         'total_alunos': Aluno.query.filter_by(status='ativo').count(),
-        'receita_mensal': db.session.query(db.func.sum(Pagamento.valor)).\
-            filter(Pagamento.data_pagamento >= primeiro_dia_mes).\
-            scalar() or 0,
-        'novas_matriculas': Aluno.query.filter(
-            Aluno.data_matricula >= (hoje - timedelta(days=30))
-        ).count(),
-        'presenca_diaria': 0,  # Implementar contagem de presenças
         
-        # Dados para os gráficos
-        'labels_meses': [
-            'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-            'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
-        ],
-        'valores_mensais': [0] * 12  # Inicializa com zeros
+        # Total de alunos novos no mês
+        'alunos_novos': Aluno.query.filter(
+            Aluno.status == 'ativo',
+            Aluno.data_matricula >= hoje.replace(day=1),
+            Aluno.data_matricula <= hoje
+        ).count(),
+        
+        # Total de pagamentos do mês
+        'pagamentos_mes': Pagamento.query.filter(
+            Pagamento.mes_referencia == mes_atual,
+            Pagamento.status == 'pago'
+        ).count(),
+        
+        # Total de pagamentos pendentes
+        'pagamentos_pendentes': Pagamento.query.filter(
+            Pagamento.mes_referencia == mes_atual,
+            Pagamento.status == 'pendente'
+        ).count(),
+        
+        # Dados para o gráfico de receita mensal (últimos 6 meses)
+        'labels_meses': [],
+        'dados_pagamentos': []
     }
     
-    # Calcula valores mensais
-    ano_atual = hoje.year
-    for mes in range(12):
-        inicio_mes = datetime(ano_atual, mes + 1, 1)
-        if mes < 11:
-            fim_mes = datetime(ano_atual, mes + 2, 1)
-        else:
-            fim_mes = datetime(ano_atual + 1, 1, 1)
-            
-        valor = db.session.query(db.func.sum(Pagamento.valor)).\
-            filter(
-                Pagamento.data_pagamento >= inicio_mes,
-                Pagamento.data_pagamento < fim_mes
-            ).scalar()
-        metricas['valores_mensais'][mes] = float(valor or 0)
+    # Prepara dados para o gráfico de receita mensal
+    for i in range(5, -1, -1):
+        data = hoje - timedelta(days=hoje.day-1) - timedelta(days=30*i)
+        mes = data.strftime('%Y-%m')
+        metricas['labels_meses'].append(data.strftime('%b/%Y'))
+        
+        total_pagos = Pagamento.query.filter(
+            Pagamento.mes_referencia == mes,
+            Pagamento.status == 'pago'
+        ).count()
+        
+        metricas['dados_pagamentos'].append(total_pagos)
     
-    return render_template('dashboard.html', metricas=metricas, datetime=datetime)
+    return render_template('dashboard.html', metricas=metricas)
 
 
 @rotas.route('/alunos')
@@ -684,41 +690,36 @@ def obter_pagamento(pagamento_id):
 @rotas.route('/api/pagamentos/resumo', methods=['GET'])
 @login_required
 def obter_resumo_pagamentos():
-    """API para obter resumo financeiro dos pagamentos."""
+    """API para obter resumo dos pagamentos."""
     hoje = datetime.now().date()
-    primeiro_dia_mes = hoje.replace(day=1)
-    ultimo_dia_mes = (hoje.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    mes_atual = hoje.strftime('%Y-%m')
     
-    # Total recebido no mês
-    total_recebido = db.session.query(db.func.sum(Pagamento.valor))\
-        .filter(Pagamento.status == 'pago')\
-        .filter(Pagamento.data_pagamento.between(primeiro_dia_mes, ultimo_dia_mes))\
-        .scalar() or 0
+    # Total de pagamentos do mês
+    total_pagos = Pagamento.query.filter(
+        Pagamento.mes_referencia == mes_atual,
+        Pagamento.status == 'pago'
+    ).count()
     
-    # Total pendente
-    total_pendente = db.session.query(db.func.sum(Pagamento.valor))\
-        .filter(Pagamento.status == 'pendente')\
-        .scalar() or 0
+    # Total de pagamentos pendentes
+    total_pendentes = Pagamento.query.filter(
+        Pagamento.mes_referencia == mes_atual,
+        Pagamento.status == 'pendente'
+    ).count()
     
-    # Total vencido
-    total_vencido = db.session.query(db.func.sum(Pagamento.valor))\
-        .filter(Pagamento.status == 'pendente')\
-        .filter(Pagamento.data_vencimento < hoje)\
-        .scalar() or 0
+    # Total de pagamentos atrasados (meses anteriores)
+    total_atrasados = Pagamento.query.filter(
+        Pagamento.mes_referencia < mes_atual,
+        Pagamento.status == 'pendente'
+    ).count()
     
     # Taxa de inadimplência
-    total_pagamentos = db.session.query(db.func.count(Pagamento.id)).scalar() or 1
-    total_vencidos = db.session.query(db.func.count(Pagamento.id))\
-        .filter(Pagamento.status == 'pendente')\
-        .filter(Pagamento.data_vencimento < hoje)\
-        .scalar() or 0
-    
-    taxa_inadimplencia = (total_vencidos / total_pagamentos) * 100
+    total_pagamentos = total_pagos + total_pendentes
+    taxa_inadimplencia = (total_pendentes / total_pagamentos * 100) if total_pagamentos > 0 else 0
     
     return jsonify({
-        'total_recebido': float(total_recebido),
-        'total_pendente': float(total_pendente),
-        'total_vencido': float(total_vencido),
+        'total_pagos': total_pagos,
+        'total_pendentes': total_pendentes,
+        'total_atrasados': total_atrasados,
         'taxa_inadimplencia': float(taxa_inadimplencia)
     })
 
