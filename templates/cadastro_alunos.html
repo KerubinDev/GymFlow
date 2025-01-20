@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Alunos - GymFlow{% endblock %}
+{% block title %}Cadastro de Alunos{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -74,64 +74,38 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gerenciamento de Alunos</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoAluno">
-            <i class="bi bi-person-plus"></i> Novo Aluno
+        <h2>Alunos</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAluno">
+            <i class="fas fa-plus me-2"></i>Novo Aluno
         </button>
     </div>
-    
-    <!-- Filtros -->
-    <div class="filtro-container">
-        <div class="row">
-            <div class="col-md-3">
-                <label for="filtroNome" class="form-label">Nome</label>
-                <input type="text" class="form-control" id="filtroNome" 
-                       placeholder="Buscar por nome">
-            </div>
-            <div class="col-md-3">
-                <label for="filtroPlano" class="form-label">Plano</label>
-                <select class="form-select" id="filtroPlano">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroStatus" class="form-label">Status</label>
-                <select class="form-select" id="filtroStatus">
-                    <option value="">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                    <option value="pendente">Pendente</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroVencimento" class="form-label">Vencimento</label>
-                <select class="form-select" id="filtroVencimento">
-                    <option value="">Todos</option>
-                    <option value="7">Próximos 7 dias</option>
-                    <option value="15">Próximos 15 dias</option>
-                    <option value="30">Próximos 30 dias</option>
-                    <option value="vencido">Vencidos</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Lista de Alunos -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div id="listaAlunos">
+
+    <!-- Tabela de Alunos -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>CPF</th>
+                            <th>Telefone</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAlunos">
                         <!-- Preenchido via JavaScript -->
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Novo/Editar Aluno -->
-<div class="modal fade" id="modalNovoAluno" tabindex="-1">
+<!-- Modal de Cadastro/Edição -->
+<div class="modal fade" id="modalAluno" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -142,117 +116,85 @@
                 <form id="formAluno">
                     <input type="hidden" id="alunoId">
                     
-                    <!-- Foto -->
-                    <div class="text-center mb-4">
-                        <img src="https://via.placeholder.com/150" 
-                             alt="Foto do aluno" 
-                             class="foto-preview" 
-                             id="fotoPreview">
-                        <input type="file" 
-                               class="upload-foto" 
-                               id="uploadFoto" 
-                               accept="image/*">
-                        <br>
-                        <button type="button" 
-                                class="btn btn-outline-primary btn-upload"
-                                onclick="document.getElementById('uploadFoto').click()">
-                            <i class="bi bi-camera"></i> Alterar Foto
-                        </button>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="nome" class="form-label">Nome Completo</label>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nome" class="form-label">Nome*</label>
                             <input type="text" class="form-control" id="nome" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email</label>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email*</label>
                             <input type="email" class="form-control" id="email" required>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="cpf" class="form-label">CPF</label>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="cpf" class="form-label">CPF*</label>
                             <input type="text" class="form-control" id="cpf" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4">
                             <label for="telefone" class="form-label">Telefone</label>
-                            <input type="tel" class="form-control" id="telefone" required>
+                            <input type="tel" class="form-control" id="telefone">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dataNascimento" class="form-label">Data de Nascimento*</label>
+                            <input type="date" class="form-control" id="dataNascimento" required>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="dataNascimento" class="form-label">
-                                Data de Nascimento
-                            </label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   id="dataNascimento" 
-                                   required>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="endereco" class="form-label">Endereço</label>
+                            <input type="text" class="form-control" id="endereco">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="plano" class="form-label">Plano</label>
-                            <select class="form-select" id="plano" name="plano" required>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="altura" class="form-label">Altura (cm)</label>
+                            <input type="number" class="form-control" id="altura" min="0" step="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="peso" class="form-label">Peso (kg)</label>
+                            <input type="number" class="form-control" id="peso" min="0" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="plano" class="form-label">Plano*</label>
+                            <select class="form-select" id="plano" required>
                                 <option value="">Selecione um plano</option>
                                 {% for plano in planos %}
-                                <option value="{{ plano.id }}" data-valor="{{ plano.valor }}" data-duracao="{{ plano.duracao_meses }}">
-                                    {{ plano.nome }} - R$ {{ "%.2f"|format(plano.valor) }} ({{ plano.duracao_meses }} meses)
+                                <option value="{{ plano.id }}" 
+                                        data-valor="{{ plano.valor }}" 
+                                        data-duracao="{{ plano.duracao_meses }}">
+                                    {{ plano.nome }} - R$ {{ "%.2f"|format(plano.valor) }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="endereco" class="form-label">Endereço</label>
-                            <input type="text" class="form-control" id="endereco">
-                        </div>
+
+                    <div class="mb-3">
+                        <label for="objetivo" class="form-label">Objetivo</label>
+                        <select class="form-select" id="objetivo">
+                            <option value="">Selecione um objetivo</option>
+                            <option value="hipertrofia">Hipertrofia</option>
+                            <option value="emagrecimento">Emagrecimento</option>
+                            <option value="condicionamento">Condicionamento Físico</option>
+                            <option value="reabilitacao">Reabilitação</option>
+                            <option value="saude">Saúde e Bem-estar</option>
+                        </select>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="altura" class="form-label">Altura (m)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="altura" 
-                                   step="0.01" 
-                                   min="0">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="peso" class="form-label">Peso (kg)</label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="peso" 
-                                   step="0.1" 
-                                   min="0">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="objetivo" class="form-label">Objetivo</label>
-                            <select class="form-select" id="objetivo">
-                                <option value="hipertrofia">Hipertrofia</option>
-                                <option value="emagrecimento">Emagrecimento</option>
-                                <option value="condicionamento">Condicionamento</option>
-                                <option value="reabilitacao">Reabilitação</option>
-                            </select>
-                        </div>
-                    </div>
-                    
+
                     <div class="mb-3">
                         <label for="observacoes" class="form-label">Observações</label>
                         <textarea class="form-control" id="observacoes" rows="3"></textarea>
                     </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnSalvarAluno">
-                    Salvar
-                </button>
             </div>
         </div>
     </div>
@@ -270,161 +212,92 @@
         $('#telefone').mask('(00) 00000-0000');
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalNovoAluno = new bootstrap.Modal(
-            document.getElementById('modalNovoAluno')
-        );
-        
-        // Preview da foto
-        document.getElementById('uploadFoto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('fotoPreview').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        // Carregar planos
-        async function carregarPlanos() {
-            try {
-                const response = await fetch('/planos');
-                const planos = await response.json();
-                
-                const selectPlano = document.getElementById('plano');
-                const filtroPlano = document.getElementById('filtroPlano');
-                
-                planos.forEach(plano => {
-                    const option = document.createElement('option');
-                    option.value = plano.id;
-                    option.textContent = `${plano.nome} - R$ ${plano.valor}`;
-                    selectPlano.appendChild(option.cloneNode(true));
-                    filtroPlano.appendChild(option);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar planos:', erro);
-            }
-        }
-        
-        // Carregar alunos
-        async function carregarAlunos() {
-            try {
-                const response = await fetch('/api/alunos');
-                if (!response.ok) throw new Error('Erro ao carregar alunos');
-                
-                const alunos = await response.json();
-                const tbody = document.querySelector('table tbody');
-                tbody.innerHTML = '';
-                
-                alunos.forEach(aluno => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${aluno.nome}</td>
-                            <td>${aluno.email}</td>
-                            <td>${aluno.cpf}</td>
-                            <td>${aluno.telefone || '-'}</td>
-                            <td>
-                                <span class="badge ${aluno.status === 'ativo' ? 'bg-success' : 'bg-danger'}">
-                                    ${aluno.status}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary me-2" onclick="editarAluno(${aluno.id})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="excluirAluno(${aluno.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar alunos:', erro);
-                alert('Erro ao carregar alunos');
-            }
-        }
-        
-        // Salvar aluno
-        async function salvarAluno(event) {
-            event.preventDefault();
+    // Carregar alunos
+    async function carregarAlunos() {
+        try {
+            const response = await fetch('/api/alunos');
+            if (!response.ok) throw new Error('Erro ao carregar alunos');
             
-            const dados = {
-                nome: document.getElementById('nome').value,
-                email: document.getElementById('email').value,
-                cpf: document.getElementById('cpf').value,
-                telefone: document.getElementById('telefone').value,
-                data_nascimento: document.getElementById('dataNascimento').value,
-                endereco: document.getElementById('endereco').value,
-                altura: document.getElementById('altura').value,
-                peso: document.getElementById('peso').value,
-                objetivo: document.getElementById('objetivo').value,
-                plano_id: document.getElementById('plano').value,
-                observacoes: document.getElementById('observacoes')?.value
-            };
-
-            try {
-                const response = await fetch('/api/alunos', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
-
-                if (!response.ok) {
-                    const erro = await response.json();
-                    throw new Error(erro.erro || 'Erro ao salvar aluno');
-                }
-
-                alert('Aluno cadastrado com sucesso!');
-                document.getElementById('formAluno').reset();
-                carregarAlunos();
-                
-                // Fecha o modal se estiver usando
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovoAluno'));
-                if (modal) modal.hide();
-
-            } catch (erro) {
-                console.error('Erro ao salvar aluno:', erro);
-                alert(erro.message);
-            }
+            const alunos = await response.json();
+            const tbody = document.getElementById('tabelaAlunos');
+            tbody.innerHTML = '';
+            
+            alunos.forEach(aluno => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${aluno.nome}</td>
+                        <td>${aluno.email}</td>
+                        <td>${aluno.cpf}</td>
+                        <td>${aluno.telefone || '-'}</td>
+                        <td>
+                            <span class="badge ${aluno.status === 'ativo' ? 'bg-success' : 'bg-danger'}">
+                                ${aluno.status}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" onclick="editarAluno(${aluno.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="excluirAluno(${aluno.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (erro) {
+            console.error('Erro ao carregar alunos:', erro);
+            alert('Erro ao carregar alunos');
         }
-        
-        // Event Listeners
-        document.getElementById('btnSalvarAluno').addEventListener('click', salvarAluno);
-        
-        // Filtros
-        ['filtroNome', 'filtroPlano', 'filtroStatus', 'filtroVencimento'].forEach(id => {
-            const elemento = document.getElementById(id);
-            if (id === 'filtroNome') {
-                elemento.addEventListener('input', debounce(carregarAlunos, 300));
-            } else {
-                elemento.addEventListener('change', carregarAlunos);
-            }
-        });
-        
-        // Inicialização
-        carregarPlanos();
-        carregarAlunos();
-    });
-    
-    // Função de debounce
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
     }
-    
-    // Funções globais
+
+    // Salvar aluno
+    async function salvarAluno(event) {
+        event.preventDefault();
+        
+        const dados = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            cpf: document.getElementById('cpf').value,
+            telefone: document.getElementById('telefone').value,
+            data_nascimento: document.getElementById('dataNascimento').value,
+            endereco: document.getElementById('endereco').value,
+            altura: document.getElementById('altura').value,
+            peso: document.getElementById('peso').value,
+            objetivo: document.getElementById('objetivo').value,
+            plano_id: document.getElementById('plano').value,
+            observacoes: document.getElementById('observacoes')?.value
+        };
+
+        try {
+            const response = await fetch('/api/alunos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            });
+
+            if (!response.ok) {
+                const erro = await response.json();
+                throw new Error(erro.erro || 'Erro ao salvar aluno');
+            }
+
+            alert('Aluno cadastrado com sucesso!');
+            document.getElementById('formAluno').reset();
+            carregarAlunos();
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAluno'));
+            if (modal) modal.hide();
+
+        } catch (erro) {
+            console.error('Erro ao salvar aluno:', erro);
+            alert(erro.message);
+        }
+    }
+
+    // Editar aluno
     async function editarAluno(id) {
         try {
             const response = await fetch(`/api/alunos/${id}`);
@@ -449,7 +322,7 @@
             }
             
             // Mostra o modal
-            const modal = new bootstrap.Modal(document.getElementById('modalNovoAluno'));
+            const modal = new bootstrap.Modal(document.getElementById('modalAluno'));
             modal.show();
             
         } catch (erro) {
@@ -457,7 +330,8 @@
             alert('Erro ao carregar aluno');
         }
     }
-    
+
+    // Excluir aluno
     async function excluirAluno(id) {
         if (!confirm('Tem certeza que deseja excluir este aluno?')) return;
         
@@ -480,24 +354,22 @@
     // Atualiza informações do plano quando selecionado
     document.getElementById('plano').addEventListener('change', function() {
         const planoSelecionado = this.options[this.selectedIndex];
+        if (!planoSelecionado.value) return;
+        
         const valor = planoSelecionado.dataset.valor;
         const duracao = planoSelecionado.dataset.duracao;
         
         // Aqui você pode atualizar outros campos baseados no plano selecionado
-        // Por exemplo, mostrar o valor total, data de vencimento, etc.
+        console.log(`Plano selecionado: Valor R$ ${valor}, Duração: ${duracao} meses`);
     });
 
-    // Função para formatar valores em reais
-    function formatarMoeda(valor) {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(valor);
-    }
-
-    // Função para formatar datas
-    function formatarData(data) {
-        return new Intl.DateTimeFormat('pt-BR').format(new Date(data));
-    }
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configura o formulário
+        document.getElementById('formAluno').addEventListener('submit', salvarAluno);
+        
+        // Carrega os alunos
+        carregarAlunos();
+    });
 </script>
 {% endblock %} 
