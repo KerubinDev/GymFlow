@@ -841,8 +841,8 @@ def listar_professores():
             'id': professor.id,
             'nome': professor.usuario.nome,
             'email': professor.usuario.email,
-            'telefone': professor.telefone,
-            'especialidades': professor.especialidades,
+            'telefone': professor.horario_disponivel,
+            'especialidades': professor.especialidade,
             'ativo': True
         } for professor in professores if professor.usuario])
     except Exception as e:
