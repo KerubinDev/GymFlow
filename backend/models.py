@@ -161,10 +161,10 @@ class Aluno(db.Model):
     peso = db.Column(db.Float)    # em kg
     objetivo = db.Column(
         db.Enum(
-            'hipertrofia',
-            'emagrecimento',
-            'condicionamento',
-            'reabilitacao',
+            'Hipertrofia',
+            'Emagrecimento',
+            'Condicionamento',
+            'Reabilitacao',
             name='objetivo_aluno'
         )
     )
@@ -370,7 +370,11 @@ class Exercicio(db.Model):
         nullable=False
     )
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data_atualizacao = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
     
     def to_dict(self):
         """Converte o objeto em um dicionário."""
