@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
+    <style>
     /* Fundo e efeitos */
     .container-fluid {
         position: relative;
@@ -78,7 +78,7 @@
     .filtros {
         background: rgba(255, 255, 255, 0.05);
         border-radius: 15px;
-        padding: 15px;
+            padding: 15px;
         margin-bottom: 20px;
     }
 
@@ -130,9 +130,9 @@
         background: rgba(255, 255, 255, 0.05);
         border-radius: 10px;
         padding: 10px;
-        margin-bottom: 10px;
-    }
-
+            margin-bottom: 10px;
+        }
+        
     .exercicio-item:hover {
         background: rgba(255, 255, 255, 0.1);
     }
@@ -169,8 +169,8 @@
     .tipo-funcional {
         background: rgba(147, 112, 219, 0.2);
         color: #9370DB;
-    }
-</style>
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -185,8 +185,8 @@
         </h2>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTreino">
             <i class="fas fa-plus me-2"></i>Novo Treino
-        </button>
-    </div>
+                    </button>
+                </div>
 
     <!-- Filtros -->
     <div class="glass-card filtros">
@@ -208,7 +208,7 @@
                 <select class="form-select" id="filtroProfessor">
                     <option value="">Todos os Professores</option>
                 </select>
-            </div>
+                </div>
             <div class="col-md-3 mb-3">
                 <select class="form-select" id="filtroStatus">
                     <option value="">Todos os Status</option>
@@ -244,12 +244,12 @@
 <!-- Modal de Treino -->
 <div class="modal fade" id="modalTreino" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-content">
+                <div class="modal-header">
                 <h5 class="modal-title text-gradient">Novo Treino</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
+                </div>
+                <div class="modal-body">
                 <form id="formTreino">
                     <input type="hidden" id="treinoId" name="id">
                     <div class="row">
@@ -304,7 +304,7 @@
                                     <div class="col-md-12">
                                         <textarea class="form-control" id="observacoesExercicio" rows="2" placeholder="Observações do exercício"></textarea>
                                     </div>
-                                </div>
+                            </div>
                                 <button type="button" class="btn btn-primary mt-2" id="btnAdicionarExercicio">
                                     <i class="fas fa-plus me-2"></i>Adicionar Exercício
                                 </button>
@@ -320,11 +320,11 @@
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
                             </select>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
+                    </form>
+                </div>
+                <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnSalvarTreino">Salvar</button>
             </div>
@@ -336,7 +336,7 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
 
-<script>
+    <script>
     // Configuração do particles.js
     particlesJS('particles-js', {
         particles: {
@@ -374,26 +374,26 @@
     });
 
     // Carregar alunos
-    async function carregarAlunos() {
-        try {
+            async function carregarAlunos() {
+                try {
             const response = await fetch('/api/alunos');
             if (!response.ok) throw new Error('Erro ao carregar alunos');
             
-            const alunos = await response.json();
+                    const alunos = await response.json();
             const selectAluno = document.getElementById('filtroAluno');
             const selectAlunoModal = document.getElementById('alunoTreino');
-            
+                    
             [selectAluno, selectAlunoModal].forEach(select => {
                 if (!select) return;
                 select.innerHTML = '<option value="">Selecione um aluno</option>';
-                alunos.forEach(aluno => {
+                    alunos.forEach(aluno => {
                     select.innerHTML += `
                         <option value="${aluno.id}">${aluno.nome}</option>
                     `;
                 });
-            });
-        } catch (erro) {
-            console.error('Erro ao carregar alunos:', erro);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar alunos:', erro);
             alert('Erro ao carregar alunos');
         }
     }
@@ -457,11 +457,11 @@
             const response = await fetch('/api/treinos');
             if (!response.ok) throw new Error('Erro ao carregar treinos');
             
-            const treinos = await response.json();
+                    const treinos = await response.json();
             const tbody = document.getElementById('listaTreinos');
             tbody.innerHTML = '';
-            
-            treinos.forEach(treino => {
+                    
+                    treinos.forEach(treino => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${treino.aluno.nome}</td>
@@ -480,16 +480,16 @@
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-2" onclick="editarTreino(${treino.id})">
                                 <i class="fas fa-edit"></i>
-                            </button>
+                                    </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="excluirTreino(${treino.id})">
                                 <i class="fas fa-trash"></i>
-                            </button>
+                                    </button>
                         </td>
                     </tr>
                 `;
-            });
-        } catch (erro) {
-            console.error('Erro ao carregar treinos:', erro);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar treinos:', erro);
             alert('Erro ao carregar treinos');
         }
     }
@@ -550,7 +550,7 @@
             observacoes: item.querySelector('small').textContent.split('\n')[1]?.trim() || ''
         }));
         
-        const dados = {
+                    const dados = {
             aluno_id: document.getElementById('alunoTreino').value,
             professor_id: document.getElementById('professorTreino').value,
             tipo: document.getElementById('tipoTreino').value,
@@ -558,19 +558,19 @@
             status: document.getElementById('statusTreino').value,
             observacoes: document.getElementById('observacoesTreino').value,
             exercicios: exercicios
-        };
+                    };
 
-        try {
+                    try {
             const response = await fetch('/api/treinos', {
                 method: 'POST',
-                headers: {
+                            headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dados)
-            });
+                            },
+                            body: JSON.stringify(dados)
+                        });
 
             if (!response.ok) {
-                const erro = await response.json();
+                            const erro = await response.json();
                 throw new Error(erro.erro || 'Erro ao salvar treino');
             }
 
@@ -582,7 +582,7 @@
             if (modal) modal.hide();
 
             carregarTreinos();
-        } catch (erro) {
+                    } catch (erro) {
             console.error('Erro ao salvar treino:', erro);
             alert(erro.message);
         }
@@ -704,5 +704,5 @@
             console.error('Erro ao carregar dados iniciais:', erro);
         });
     });
-</script>
+    </script>
 {% endblock %} 

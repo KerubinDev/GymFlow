@@ -3,7 +3,7 @@
 {% block title %}Horários das Turmas - GymFlow{% endblock %}
 
 {% block extra_css %}
-<style>
+    <style>
     .card {
         border: none;
         border-radius: 10px;
@@ -46,7 +46,7 @@
     }
     
     .filtro-container {
-        background-color: #f8f9fa;
+            background-color: #f8f9fa;
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 20px;
@@ -72,7 +72,7 @@
     
     .horario-cell {
         background-color: var(--bs-light);
-        padding: 8px;
+            padding: 8px;
         min-height: 80px;
         border-radius: 2px;
         cursor: pointer;
@@ -100,15 +100,15 @@
     .badge {
         font-size: 0.7rem;
     }
-</style>
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
+        <div class="card">
+            <div class="card-body">
                     <h5 class="card-title">Filtros</h5>
                     <div class="row g-3">
                         <div class="col-md-3">
@@ -123,14 +123,14 @@
                                 <option value="danca">Dança</option>
                                 <option value="spinning">Spinning</option>
                                 <option value="natacao">Natação</option>
-                            </select>
-                        </div>
+                        </select>
+                    </div>
                         <div class="col-md-3">
                             <label for="filtroProfessor" class="form-label">Professor</label>
                             <select id="filtroProfessor" class="form-select">
                                 <option value="">Todos</option>
-                            </select>
-                        </div>
+                        </select>
+                    </div>
                         <div class="col-md-3">
                             <label for="filtroPeriodo" class="form-label">Período</label>
                             <select id="filtroPeriodo" class="form-select">
@@ -177,13 +177,13 @@
 
 <!-- Modal Nova/Editar Turma -->
 <div class="modal fade" id="modalNovaTurma" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
                 <h5 class="modal-title">Nova Turma</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
+                </div>
+                <div class="modal-body">
                 <form id="formTurma">
                     <input type="hidden" id="turmaId">
                     
@@ -202,7 +202,7 @@
                         </select>
                     </div>
                     
-                    <div class="mb-3">
+                        <div class="mb-3">
                         <label for="professor" class="form-label">Professor</label>
                         <select id="professor" class="form-select" required>
                             <option value="">Selecione um professor</option>
@@ -256,9 +256,9 @@
                     <div class="text-end">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </form>
-            </div>
+                        </div>
+                    </form>
+                </div>
         </div>
     </div>
 </div>
@@ -282,39 +282,39 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+    <script>
     // Carregar professores
-    async function carregarProfessores() {
-        try {
+            async function carregarProfessores() {
+                try {
             const response = await fetch('/api/professores');
             if (!response.ok) throw new Error('Erro ao carregar professores');
             
-            const professores = await response.json();
+                    const professores = await response.json();
             const selectProfessor = document.getElementById('filtroProfessor');
             const selectProfessorModal = document.getElementById('professor');
-            
+                    
             [selectProfessor, selectProfessorModal].forEach(select => {
                 if (!select) return;
                 select.innerHTML = '<option value="">Selecione um professor</option>';
-                professores.forEach(professor => {
+                    professores.forEach(professor => {
                     select.innerHTML += `
                         <option value="${professor.id}">${professor.nome}</option>
                     `;
                 });
-            });
-        } catch (erro) {
-            console.error('Erro ao carregar professores:', erro);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar professores:', erro);
             alert('Erro ao carregar professores');
-        }
-    }
+                }
+            }
 
     // Carregar turmas
-    async function carregarTurmas() {
-        try {
+            async function carregarTurmas() {
+                try {
             const response = await fetch('/api/turmas');
             if (!response.ok) throw new Error('Erro ao carregar turmas');
             
-            const turmas = await response.json();
+                    const turmas = await response.json();
             const horarioGrid = document.querySelector('.horario-grid');
             
             // Limpa os horários existentes
@@ -381,9 +381,9 @@
                     
                     horarioGrid.appendChild(cell);
                 }
-            });
-        } catch (erro) {
-            console.error('Erro ao carregar turmas:', erro);
+                    });
+                } catch (erro) {
+                    console.error('Erro ao carregar turmas:', erro);
             alert('Erro ao carregar turmas');
         }
     }
@@ -452,7 +452,7 @@
             
             const response = await fetch(url, {
                 method: method,
-                headers: {
+                                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(dados)
@@ -469,7 +469,7 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovaTurma'));
             if (modal) modal.hide();
 
-            carregarTurmas();
+                            carregarTurmas();
         } catch (erro) {
             console.error('Erro ao salvar turma:', erro);
             alert(erro.message);
@@ -503,6 +503,6 @@
             carregarProfessores(),
             carregarTurmas()
         ]);
-    });
-</script>
+        });
+    </script>
 {% endblock %} 

@@ -247,15 +247,15 @@ def criar_usuario():
         
         # Cria o usuário
         usuario = Usuario(
-            nome=dados['nome'],
+        nome=dados['nome'],
             email=dados['email'],
             tipo=dados['tipo'],
-            status='ativo'
-        )
+        status='ativo'
+    )
         usuario.senha = dados['senha']
         
         db.session.add(usuario)
-        db.session.commit()
+    db.session.commit()
         
         return jsonify({
             'mensagem': 'Usuário cadastrado com sucesso',
@@ -308,7 +308,7 @@ def atualizar_usuario(usuario_id):
         if 'status' in dados:
             usuario.status = dados['status']
         
-        db.session.commit()
+    db.session.commit()
         return jsonify({'mensagem': 'Usuário atualizado com sucesso'})
         
     except Exception as e:
@@ -354,7 +354,7 @@ def criar_plano():
         )
         
         db.session.add(plano)
-        db.session.commit()
+    db.session.commit()
         
         return jsonify(plano.to_dict()), 201
         
@@ -378,7 +378,7 @@ def atualizar_plano(plano_id):
         plano.duracao_meses = int(dados.get('duracao_meses', plano.duracao_meses))
         plano.ativo = dados.get('ativo', plano.ativo)
         
-        db.session.commit()
+    db.session.commit()
         return jsonify(plano.to_dict())
         
     except Exception as e:
@@ -395,7 +395,7 @@ def deletar_plano(plano_id):
     
     try:
         db.session.delete(plano)
-        db.session.commit()
+    db.session.commit()
         return '', 204
         
     except Exception as e:
@@ -454,7 +454,7 @@ def criar_aluno():
         )
         
         db.session.add(aluno)
-        db.session.commit()
+    db.session.commit()
         
         return jsonify(aluno.to_dict()), 201
         
@@ -498,7 +498,7 @@ def atualizar_aluno(aluno_id):
         
         db.session.commit()
         return jsonify(aluno.to_dict())
-        
+    
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 400
@@ -511,10 +511,10 @@ def deletar_aluno(aluno_id):
     aluno = Aluno.query.get_or_404(aluno_id)
     
     try:
-        db.session.delete(aluno)
-        db.session.commit()
-        return '', 204
-        
+    db.session.delete(aluno)
+    db.session.commit()
+    return '', 204
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 400
@@ -622,7 +622,7 @@ def atualizar_pagamento(pagamento_id):
         pagamento.observacoes = dados['observacoes']
     
     try:
-        db.session.commit()
+    db.session.commit()
         return jsonify({'mensagem': 'Pagamento atualizado com sucesso'})
     except Exception as e:
         db.session.rollback()
@@ -722,7 +722,7 @@ def criar_treino():
         )
         
         db.session.add(treino)
-        db.session.commit()
+    db.session.commit()
         
         return jsonify(treino.to_dict()), 201
         
@@ -802,7 +802,7 @@ def criar_exercicio():
     
     try:
         exercicio = Exercicio(
-            nome=dados['nome'],
+        nome=dados['nome'],
             descricao=dados.get('descricao'),
             grupo_muscular=dados['grupo_muscular'],
             equipamento=dados.get('equipamento'),
