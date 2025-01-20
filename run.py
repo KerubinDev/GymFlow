@@ -19,21 +19,21 @@ def criar_usuarios_iniciais():
     """Cria usuários iniciais do sistema"""
     usuarios = [
         {
+            'nome': 'Administrador',
             'email': 'admin@academia.com',
             'senha': 'admin123',
-            'nome': 'Administrador',
             'tipo': 'gerente'
         },
         {
+            'nome': 'Professor',
             'email': 'professor@academia.com',
             'senha': 'prof123',
-            'nome': 'Professor Principal',
             'tipo': 'professor'
         },
         {
+            'nome': 'Recepção',
             'email': 'recepcao@academia.com',
             'senha': 'rec123',
-            'nome': 'Recepcionista',
             'tipo': 'recepcionista'
         }
     ]
@@ -42,26 +42,14 @@ def criar_usuarios_iniciais():
         usuario = Usuario.query.filter_by(email=dados['email']).first()
         if not usuario:
             novo_usuario = Usuario(
-                email=dados['email'],
                 nome=dados['nome'],
-                tipo=dados['tipo']
+                email=dados['email'],
+                tipo=dados['tipo'],
+                status='ativo'
             )
-            novo_usuario.senha = dados['senha']  # Usando o property setter
+            novo_usuario.senha = dados['senha']
             db.session.add(novo_usuario)
-            
-            # Se for professor, cria o registro de professor
-            if dados['tipo'] == 'professor':
-                professor = Professor(
-                    usuario=novo_usuario,
-                    especialidade='Musculação',
-                    horario_disponivel='08:00-18:00'
-                )
-                db.session.add(professor)
-            
             print(f"Usuário {dados['nome']} criado com sucesso!")
-            print(f"Email: {dados['email']}")
-            print(f"Senha: {dados['senha']}")
-            print("---")
     
     db.session.commit()
 
@@ -72,25 +60,29 @@ def criar_planos_iniciais():
             'nome': 'Mensal',
             'valor': 100.0,
             'duracao_meses': 1,
-            'descricao': 'Plano mensal com acesso a todas as modalidades'
+            'descricao': 'Plano mensal com acesso a todas as modalidades',
+            'ativo': True
         },
         {
             'nome': 'Trimestral',
             'valor': 270.0,
             'duracao_meses': 3,
-            'descricao': 'Plano trimestral com 10% de desconto'
+            'descricao': 'Plano trimestral com 10% de desconto',
+            'ativo': True
         },
         {
             'nome': 'Semestral',
             'valor': 510.0,
             'duracao_meses': 6,
-            'descricao': 'Plano semestral com 15% de desconto'
+            'descricao': 'Plano semestral com 15% de desconto',
+            'ativo': True
         },
         {
             'nome': 'Anual',
             'valor': 960.0,
             'duracao_meses': 12,
-            'descricao': 'Plano anual com 20% de desconto'
+            'descricao': 'Plano anual com 20% de desconto',
+            'ativo': True
         }
     ]
     
@@ -105,31 +97,14 @@ def criar_planos_iniciais():
 
 def criar_dados_exemplo():
     """Cria dados de exemplo para o sistema."""
-    with app.app_context():
-        # Verifica se já existem dados
-        if Usuario.query.count() > 1:  # Ignora o admin padrão
-            return
-        
-        # Criar planos
-        plano_basic = Plano(
-            nome='Plano Basic',
-            descricao='Acesso à academia em horário comercial',
-            valor=89.90,
-            duracao_meses=1,
-            ativo=True
-        )
-        
-        plano_premium = Plano(
-            nome='Plano Premium',
-            descricao='Acesso total à academia + aulas',
-            valor=129.90,
-            duracao_meses=1,
-            ativo=True
-        )
-        
-        db.session.add_all([plano_basic, plano_premium])
-        db.session.commit()
-        
+    print("Criando dados de exemplo...")
+    
+    # Verifica se já existem dados
+    if Usuario.query.count() > 1:  # Ignora o admin padrão
+        print("Dados de exemplo já existem.")
+        return
+    
+    try:
         # Criar professores
         usuario_prof1 = Usuario(
             nome='João Silva',
@@ -149,6 +124,7 @@ def criar_dados_exemplo():
         
         db.session.add_all([usuario_prof1, usuario_prof2])
         db.session.commit()
+        print("Professores criados com sucesso!")
         
         professor1 = Professor(
             usuario_id=usuario_prof1.id,
@@ -166,6 +142,7 @@ def criar_dados_exemplo():
         
         db.session.add_all([professor1, professor2])
         db.session.commit()
+        print("Dados dos professores adicionados com sucesso!")
         
         # Criar recepcionista
         usuario_recep = Usuario(
@@ -177,8 +154,12 @@ def criar_dados_exemplo():
         usuario_recep.senha = 'senha123'
         db.session.add(usuario_recep)
         db.session.commit()
+        print("Recepcionista criada com sucesso!")
         
         # Criar alunos
+        plano_mensal = Plano.query.filter_by(nome='Mensal').first()
+        plano_trimestral = Plano.query.filter_by(nome='Trimestral').first()
+        
         aluno1 = Aluno(
             nome='Pedro Souza',
             email='pedro@email.com',
@@ -189,7 +170,7 @@ def criar_dados_exemplo():
             altura=1.75,
             peso=75.0,
             objetivo='Hipertrofia',
-            plano_id=plano_premium.id,
+            plano_id=plano_mensal.id,
             status='ativo'
         )
         
@@ -203,12 +184,13 @@ def criar_dados_exemplo():
             altura=1.65,
             peso=60.0,
             objetivo='Emagrecimento',
-            plano_id=plano_basic.id,
+            plano_id=plano_trimestral.id,
             status='ativo'
         )
         
         db.session.add_all([aluno1, aluno2])
         db.session.commit()
+        print("Alunos criados com sucesso!")
         
         # Criar exercícios
         exercicios = [
@@ -237,6 +219,7 @@ def criar_dados_exemplo():
         
         db.session.add_all(exercicios)
         db.session.commit()
+        print("Exercícios criados com sucesso!")
         
         # Criar treinos
         treino1 = Treino(
@@ -263,6 +246,7 @@ def criar_dados_exemplo():
         
         db.session.add(treino1)
         db.session.commit()
+        print("Treinos criados com sucesso!")
         
         # Criar turmas
         turma1 = Turma(
@@ -289,6 +273,7 @@ def criar_dados_exemplo():
         
         db.session.add_all([turma1, turma2])
         db.session.commit()
+        print("Turmas criadas com sucesso!")
         
         # Matricular alunos nas turmas
         matricula1 = MatriculaTurma(
@@ -307,6 +292,7 @@ def criar_dados_exemplo():
         
         db.session.add_all([matricula1, matricula2])
         db.session.commit()
+        print("Matrículas criadas com sucesso!")
         
         # Criar pagamentos
         mes_atual = datetime.now().strftime('%Y-%m')
@@ -337,6 +323,14 @@ def criar_dados_exemplo():
         
         db.session.add_all([pagamento1, pagamento2, pagamento3])
         db.session.commit()
+        print("Pagamentos criados com sucesso!")
+        
+        print("Todos os dados de exemplo foram criados com sucesso!")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao criar dados de exemplo: {str(e)}")
+        raise
 
 def inicializar_sistema():
     """Inicializa o sistema com as configurações necessárias"""
@@ -356,8 +350,13 @@ def inicializar_sistema():
         
         # Criar dados iniciais
         criar_usuarios_iniciais()
+        print("Usuários iniciais criados.")
+        
         criar_planos_iniciais()
+        print("Planos iniciais criados.")
+        
         criar_dados_exemplo()
+        print("Dados de exemplo criados.")
     
     print("\nSistema inicializado com sucesso!")
     print("\nAcesse o sistema usando uma das seguintes contas:")
