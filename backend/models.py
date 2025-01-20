@@ -317,33 +317,33 @@ class Treino(db.Model):
 
 
 class Exercicio(db.Model):
-    """Modelo para exercícios dos treinos."""
+    """Modelo para exercícios da academia."""
     __tablename__ = 'exercicios'
     
     id = db.Column(db.Integer, primary_key=True)
-    treino_id = db.Column(
-        db.Integer,
-        db.ForeignKey('treinos.id'),
+    nome = db.Column(db.String(100), nullable=False)
+    detalhes = db.Column(db.Text)
+    grupo_muscular = db.Column(db.String(50), nullable=False)
+    equipamento = db.Column(db.String(100))
+    nivel = db.Column(
+        db.Enum('iniciante', 'intermediario', 'avancado', name='nivel_exercicio'),
+        default='iniciante',
         nullable=False
     )
-    nome = db.Column(db.String(100), nullable=False)
-    series = db.Column(db.Integer, nullable=False)
-    repeticoes = db.Column(db.Integer, nullable=False)
-    carga = db.Column(db.Float)  # em kg
-    observacoes = db.Column(db.Text)
-    ordem = db.Column(db.Integer, nullable=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Converte o objeto para dicionário."""
+    def to_dict(self):
+        """Converte o objeto em um dicionário."""
         return {
             'id': self.id,
-            'treino_id': self.treino_id,
             'nome': self.nome,
-            'series': self.series,
-            'repeticoes': self.repeticoes,
-            'carga': self.carga,
-            'observacoes': self.observacoes,
-            'ordem': self.ordem
+            'detalhes': self.detalhes,
+            'grupo_muscular': self.grupo_muscular,
+            'equipamento': self.equipamento,
+            'nivel': self.nivel,
+            'data_criacao': self.data_criacao.isoformat(),
+            'data_atualizacao': self.data_atualizacao.isoformat()
         }
 
 

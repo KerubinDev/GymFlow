@@ -201,21 +201,21 @@ def criar_dados_exemplo():
         exercicios = [
             Exercicio(
                 nome='Supino Reto',
-                descricao='Exercício para peitoral com barra',
+                detalhes='Exercício para peitoral com barra',
                 grupo_muscular='Peitoral',
                 equipamento='Barra e banco',
                 nivel='intermediario'
             ),
             Exercicio(
                 nome='Agachamento',
-                descricao='Exercício para pernas',
+                detalhes='Exercício para pernas',
                 grupo_muscular='Pernas',
                 equipamento='Barra e suporte',
                 nivel='intermediario'
             ),
             Exercicio(
                 nome='Puxada Alta',
-                descricao='Exercício para costas',
+                detalhes='Exercício para costas',
                 grupo_muscular='Costas',
                 equipamento='Máquina',
                 nivel='iniciante'
