@@ -804,7 +804,7 @@ def criar_exercicio():
     try:
         exercicio = Exercicio(
             nome=dados['nome'],
-            descricao=dados.get('descricao'),
+            detalhes=dados.get('detalhes'),
             grupo_muscular=dados['grupo_muscular'],
             equipamento=dados.get('equipamento'),
             nivel=dados.get('nivel', 'iniciante')
