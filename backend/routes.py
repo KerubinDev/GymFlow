@@ -135,7 +135,10 @@ def alunos():
     """
     if current_user.tipo not in ['gerente', 'recepcionista']:
         return redirect(url_for('rotas.index'))
-    return render_template('cadastro_alunos.html')
+    
+    # Busca apenas planos ativos
+    planos_disponiveis = Plano.query.filter_by(ativo=True).all()
+    return render_template('cadastro_alunos.html', planos=planos_disponiveis)
 
 
 @rotas.route('/treinos')
@@ -429,3 +432,11 @@ def obter_plano(plano_id):
     """API para obter detalhes de um plano específico."""
     plano = Plano.query.get_or_404(plano_id)
     return jsonify(plano.to_dict())
+
+
+@rotas.route('/api/planos/disponiveis', methods=['GET'])
+@login_required
+def listar_planos_disponiveis():
+    """API para listar planos disponíveis."""
+    planos = Plano.query.filter_by(ativo=True).all()
+    return jsonify([plano.to_dict() for plano in planos])

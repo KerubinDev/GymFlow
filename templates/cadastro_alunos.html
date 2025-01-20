@@ -194,8 +194,13 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="plano" class="form-label">Plano</label>
-                            <select class="form-select" id="plano" required>
+                            <select class="form-select" id="plano" name="plano" required>
                                 <option value="">Selecione um plano</option>
+                                {% for plano in planos %}
+                                <option value="{{ plano.id }}" data-valor="{{ plano.valor }}" data-duracao="{{ plano.duracao_meses }}">
+                                    {{ plano.nome }} - R$ {{ "%.2f"|format(plano.valor) }} ({{ plano.duracao_meses }} meses)
+                                </option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -498,6 +503,29 @@
                 alert('Erro ao excluir aluno');
             }
         }
+    }
+
+    // Atualiza informações do plano quando selecionado
+    document.getElementById('plano').addEventListener('change', function() {
+        const planoSelecionado = this.options[this.selectedIndex];
+        const valor = planoSelecionado.dataset.valor;
+        const duracao = planoSelecionado.dataset.duracao;
+        
+        // Aqui você pode atualizar outros campos baseados no plano selecionado
+        // Por exemplo, mostrar o valor total, data de vencimento, etc.
+    });
+
+    // Função para formatar valores em reais
+    function formatarMoeda(valor) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(valor);
+    }
+
+    // Função para formatar datas
+    function formatarData(data) {
+        return new Intl.DateTimeFormat('pt-BR').format(new Date(data));
     }
 </script>
 {% endblock %} 
