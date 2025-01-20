@@ -218,151 +218,123 @@ def api_login():
     return jsonify({'mensagem': 'Email ou senha inválidos'}), 401
 
 
-@rotas.route('/api/usuarios', methods=['GET', 'POST'])
+@rotas.route('/api/usuarios', methods=['GET'])
 @login_required
-def api_usuarios():
-    """
-    API para gerenciamento de usuários
-    """
-    if current_user.tipo != 'gerente':
-        return jsonify({'mensagem': 'Acesso negado'}), 403
-    
-    if request.method == 'GET':
-        usuarios = Usuario.query.all()
-        return jsonify([usuario.to_dict() for usuario in usuarios])
-    
-    dados = request.form.to_dict()
+@gerente_required
+def listar_usuarios():
+    """Lista todos os usuários."""
+    usuarios = Usuario.query.all()
+    return jsonify([{
+        'id': usuario.id,
+        'nome': usuario.nome,
+        'email': usuario.email,
+        'tipo': usuario.tipo,
+        'status': usuario.status
+    } for usuario in usuarios])
+
+
+@rotas.route('/api/usuarios', methods=['POST'])
+@login_required
+@gerente_required
+def criar_usuario():
+    """Cria um novo usuário."""
+    dados = request.get_json()
     
     try:
-        novo_usuario = Usuario(
+        # Verifica se já existe usuário com este email
+        if Usuario.query.filter_by(email=dados['email']).first():
+            return jsonify({'erro': 'Email já cadastrado'}), 400
+        
+        # Cria o usuário
+        usuario = Usuario(
             nome=dados['nome'],
             email=dados['email'],
             tipo=dados['tipo'],
-            status=dados['status']
+            status='ativo'
         )
-        novo_usuario.senha = dados['senha']
+        usuario.senha = dados['senha']
         
-        if 'foto' in request.files:
-            foto = request.files['foto']
-            if foto.filename:
-                # Implementar upload de foto
-                pass
-        
-        db.session.add(novo_usuario)
-        
-        # Se for professor, cria registro na tabela de professores
-        if dados['tipo'] == 'professor':
-            professor = Professor(
-                usuario=novo_usuario,
-                especialidade=dados['especialidade'],
-                horario_disponivel=dados['horarioDisponivel']
-            )
-            db.session.add(professor)
-        
+        db.session.add(usuario)
         db.session.commit()
-        return jsonify({'mensagem': 'Usuário criado com sucesso'})
-    
+        
+        return jsonify({
+            'mensagem': 'Usuário cadastrado com sucesso',
+            'id': usuario.id
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'mensagem': str(e)}), 400
+        return jsonify({'erro': str(e)}), 400
 
 
-@rotas.route('/api/usuarios/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@rotas.route('/api/usuarios/<int:usuario_id>', methods=['GET'])
 @login_required
-def api_usuario(id):
-    """
-    API para gerenciar um usuário específico
-    """
-    if current_user.tipo != 'gerente':
-        return jsonify({'mensagem': 'Acesso negado'}), 403
-    
-    usuario = Usuario.query.get_or_404(id)
-    
-    if request.method == 'GET':
-        return jsonify(usuario.to_dict())
-    
-    elif request.method == 'PUT':
-        dados = request.form.to_dict()
-        
-        try:
-            usuario.nome = dados.get('nome', usuario.nome)
-            usuario.email = dados.get('email', usuario.email)
-            usuario.tipo = dados.get('tipo', usuario.tipo)
-            usuario.status = dados.get('status', usuario.status)
-            
-            if 'senha' in dados:
-                usuario.senha = dados['senha']
-            
-            if 'foto' in request.files:
-                foto = request.files['foto']
-                if foto.filename:
-                    # Implementar upload de foto
-                    pass
-            
-            # Atualiza dados do professor se aplicável
-            if usuario.tipo == 'professor':
-                professor = usuario.professor or Professor(usuario=usuario)
-                professor.especialidade = dados.get('especialidade', professor.especialidade)
-                professor.horario_disponivel = dados.get('horarioDisponivel', professor.horario_disponivel)
-                if not usuario.professor:
-                    db.session.add(professor)
-            
-            db.session.commit()
-            return jsonify({'mensagem': 'Usuário atualizado com sucesso'})
-        
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'mensagem': str(e)}), 400
-    
-    elif request.method == 'DELETE':
-        try:
-            db.session.delete(usuario)
-            db.session.commit()
-            return jsonify({'mensagem': 'Usuário excluído com sucesso'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'mensagem': str(e)}), 400
+@gerente_required
+def obter_usuario(usuario_id):
+    """Obtém os detalhes de um usuário específico."""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    return jsonify({
+        'id': usuario.id,
+        'nome': usuario.nome,
+        'email': usuario.email,
+        'tipo': usuario.tipo,
+        'status': usuario.status
+    })
 
 
-@rotas.route('/api/usuarios/<int:id>/resetar-senha', methods=['PUT'])
+@rotas.route('/api/usuarios/<int:usuario_id>', methods=['PUT'])
 @login_required
-def api_resetar_senha(id):
-    """
-    API para resetar a senha de um usuário
-    """
-    if current_user.tipo != 'gerente':
-        return jsonify({'mensagem': 'Acesso negado'}), 403
-    
-    usuario = Usuario.query.get_or_404(id)
-    nova_senha = usuario.gerar_senha_aleatoria()
-    usuario.senha = nova_senha
+@gerente_required
+def atualizar_usuario(usuario_id):
+    """Atualiza os dados de um usuário."""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    dados = request.get_json()
     
     try:
+        # Verifica se o email já está em uso por outro usuário
+        if 'email' in dados and dados['email'] != usuario.email:
+            if Usuario.query.filter_by(email=dados['email']).first():
+                return jsonify({'erro': 'Email já cadastrado'}), 400
+        
+        # Atualiza os dados do usuário
+        if 'nome' in dados:
+            usuario.nome = dados['nome']
+        if 'email' in dados:
+            usuario.email = dados['email']
+        if 'tipo' in dados:
+            usuario.tipo = dados['tipo']
+        if 'senha' in dados and dados['senha']:
+            usuario.senha = dados['senha']
+        if 'status' in dados:
+            usuario.status = dados['status']
+        
         db.session.commit()
-        return jsonify({'senha': nova_senha})
+        return jsonify({'mensagem': 'Usuário atualizado com sucesso'})
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'mensagem': str(e)}), 400
+        return jsonify({'erro': str(e)}), 400
 
 
-@rotas.route('/api/usuarios/<int:id>/inativar', methods=['PUT'])
+@rotas.route('/api/usuarios/<int:usuario_id>', methods=['DELETE'])
 @login_required
-def api_inativar_usuario(id):
-    """
-    API para inativar um usuário
-    """
-    if current_user.tipo != 'gerente':
-        return jsonify({'mensagem': 'Acesso negado'}), 403
-    
-    usuario = Usuario.query.get_or_404(id)
-    usuario.status = 'inativo'
+@gerente_required
+def deletar_usuario(usuario_id):
+    """Inativa um usuário."""
+    usuario = Usuario.query.get_or_404(usuario_id)
     
     try:
+        # Não permite inativar o próprio usuário
+        if usuario.id == current_user.id:
+            return jsonify({'erro': 'Não é possível inativar seu próprio usuário'}), 400
+        
+        usuario.status = 'inativo'
         db.session.commit()
         return jsonify({'mensagem': 'Usuário inativado com sucesso'})
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'mensagem': str(e)}), 400
+        return jsonify({'erro': str(e)}), 400
 
 
 @rotas.route('/api/planos', methods=['POST'])
@@ -1055,164 +1027,3 @@ def criar_turma():
     professor = Professor.query.get(dados['professor_id'])
     if not professor:
         return jsonify({'erro': 'Professor não encontrado'}), 404
-    
-    # Verifica se já existe turma no mesmo horário
-    turma_existente = Turma.query.filter_by(
-        dia_semana=dados['dia_semana'],
-        horario_inicio=dados['horario_inicio']
-    ).first()
-    if turma_existente:
-        return jsonify({'erro': 'Já existe uma turma neste horário'}), 400
-    
-    # Cria a nova turma
-    turma = Turma(
-        modalidade=dados['modalidade'],
-        professor_id=dados['professor_id'],
-        dia_semana=dados['dia_semana'],
-        horario_inicio=dados['horario_inicio'],
-        horario_fim=dados['horario_fim'],
-        capacidade_maxima=dados['capacidade_maxima'],
-        nivel=dados['nivel'],
-        descricao=dados.get('descricao', '')
-    )
-    
-    db.session.add(turma)
-    db.session.commit()
-    
-    return jsonify({
-        'mensagem': 'Turma criada com sucesso',
-        'id': turma.id
-    }), 201
-
-
-@rotas.route('/api/turmas/<int:turma_id>', methods=['PUT'])
-@login_required
-@gerente_required
-def atualizar_turma(turma_id):
-    """Atualiza uma turma existente."""
-    turma = Turma.query.get_or_404(turma_id)
-    dados = request.get_json()
-    
-    # Validação dos dados
-    campos_obrigatorios = [
-        'modalidade', 'professor_id', 'dia_semana', 
-        'horario_inicio', 'horario_fim', 'capacidade_maxima', 'nivel'
-    ]
-    for campo in campos_obrigatorios:
-        if campo not in dados:
-            return jsonify({'erro': f'Campo {campo} é obrigatório'}), 400
-    
-    # Verifica se o professor existe
-    professor = Professor.query.get(dados['professor_id'])
-    if not professor:
-        return jsonify({'erro': 'Professor não encontrado'}), 404
-    
-    # Verifica se já existe outra turma no mesmo horário
-    turma_existente = Turma.query.filter(
-        Turma.id != turma_id,
-        Turma.dia_semana == dados['dia_semana'],
-        Turma.horario_inicio == dados['horario_inicio']
-    ).first()
-    if turma_existente:
-        return jsonify({'erro': 'Já existe uma turma neste horário'}), 400
-    
-    # Atualiza a turma
-    turma.modalidade = dados['modalidade']
-    turma.professor_id = dados['professor_id']
-    turma.dia_semana = dados['dia_semana']
-    turma.horario_inicio = dados['horario_inicio']
-    turma.horario_fim = dados['horario_fim']
-    turma.capacidade_maxima = dados['capacidade_maxima']
-    turma.nivel = dados['nivel']
-    turma.descricao = dados.get('descricao', '')
-    
-    db.session.commit()
-    
-    return jsonify({'mensagem': 'Turma atualizada com sucesso'})
-
-
-@rotas.route('/api/turmas/<int:turma_id>', methods=['DELETE'])
-@login_required
-@gerente_required
-def deletar_turma(turma_id):
-    """Deleta uma turma existente."""
-    turma = Turma.query.get_or_404(turma_id)
-    
-    # Verifica se há alunos matriculados
-    if turma.matriculas:
-        return jsonify({
-            'erro': 'Não é possível excluir uma turma com alunos matriculados'
-        }), 400
-    
-    db.session.delete(turma)
-    db.session.commit()
-    
-    return jsonify({'mensagem': 'Turma excluída com sucesso'})
-
-
-@rotas.route('/api/turmas/<int:turma_id>/matriculas', methods=['GET'])
-@login_required
-def listar_matriculas_turma(turma_id):
-    """API para listar matrículas de uma turma."""
-    turma = Turma.query.get_or_404(turma_id)
-    return jsonify([matricula.to_dict() for matricula in turma.matriculas])
-
-
-@rotas.route('/api/turmas/<int:turma_id>/matriculas', methods=['POST'])
-@login_required
-def matricular_aluno(turma_id):
-    """API para matricular um aluno em uma turma."""
-    turma = Turma.query.get_or_404(turma_id)
-    dados = request.get_json()
-    
-    try:
-        # Verifica se há vagas
-        if len(turma.matriculas) >= turma.capacidade_maxima:
-            return jsonify({'erro': 'Turma lotada'}), 400
-        
-        # Verifica se o aluno já está matriculado
-        matricula_existente = MatriculaTurma.query.filter_by(
-            aluno_id=dados['aluno_id'],
-            turma_id=turma_id,
-            status='ativo'
-        ).first()
-        
-        if matricula_existente:
-            return jsonify({'erro': 'Aluno já matriculado nesta turma'}), 400
-        
-        matricula = MatriculaTurma(
-            aluno_id=dados['aluno_id'],
-            turma_id=turma_id,
-            data_inicio=datetime.now().date(),
-            status='ativo'
-        )
-        
-        db.session.add(matricula)
-        db.session.commit()
-        
-        return jsonify(matricula.to_dict()), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'erro': str(e)}), 400
-
-
-@rotas.route('/api/turmas/<int:turma_id>/matriculas/<int:matricula_id>', methods=['DELETE'])
-@login_required
-def cancelar_matricula(turma_id, matricula_id):
-    """API para cancelar a matrícula de um aluno em uma turma."""
-    matricula = MatriculaTurma.query.get_or_404(matricula_id)
-    
-    if matricula.turma_id != turma_id:
-        return jsonify({'erro': 'Matrícula não pertence a esta turma'}), 400
-    
-    try:
-        matricula.status = 'cancelado'
-        matricula.data_fim = datetime.now().date()
-        
-        db.session.commit()
-        return jsonify(matricula.to_dict())
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'erro': str(e)}), 400

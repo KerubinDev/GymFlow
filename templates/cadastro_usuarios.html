@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Usuários - GymFlow{% endblock %}
+{% block title %}Cadastro de Usuários - GymFlow{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -73,154 +73,73 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gerenciamento de Usuários</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoUsuario">
-            <i class="bi bi-person-plus"></i> Novo Usuário
-        </button>
-    </div>
-    
-    <!-- Filtros -->
-    <div class="filtro-container">
-        <div class="row">
-            <div class="col-md-4">
-                <label for="filtroNome" class="form-label">Nome</label>
-                <input type="text" class="form-control" id="filtroNome" 
-                       placeholder="Buscar por nome">
+    <div class="card glass-card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="card-title mb-0">Usuários</h4>
+                <button type="button" class="btn btn-primary" onclick="abrirModalUsuario()">
+                    <i class="fas fa-plus"></i> Novo Usuário
+                </button>
             </div>
-            <div class="col-md-4">
-                <label for="filtroTipo" class="form-label">Tipo</label>
-                <select class="form-select" id="filtroTipo">
-                    <option value="">Todos</option>
-                    <option value="gerente">Gerente</option>
-                    <option value="professor">Professor</option>
-                    <option value="recepcionista">Recepcionista</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="filtroStatus" class="form-label">Status</label>
-                <select class="form-select" id="filtroStatus">
-                    <option value="">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Lista de Usuários -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div id="listaUsuarios">
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUsuarios">
                         <!-- Preenchido via JavaScript -->
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Novo/Editar Usuário -->
-<div class="modal fade" id="modalNovoUsuario" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<!-- Modal de Cadastro/Edição -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Usuário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="modalUsuarioTitulo">Novo Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
                 <form id="formUsuario">
                     <input type="hidden" id="usuarioId">
-                    
-                    <!-- Foto -->
-                    <div class="text-center mb-4">
-                        <img src="https://via.placeholder.com/150" 
-                             alt="Foto do usuário" 
-                             class="foto-preview" 
-                             id="fotoPreview">
-                        <input type="file" 
-                               class="upload-foto" 
-                               id="uploadFoto" 
-                               accept="image/*">
-                        <br>
-                        <button type="button" 
-                                class="btn btn-outline-primary btn-upload"
-                                onclick="document.getElementById('uploadFoto').click()">
-                            <i class="bi bi-camera"></i> Alterar Foto
-                        </button>
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="nome" class="form-label">Nome Completo</label>
-                            <input type="text" class="form-control" id="nome" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" required>
-                        </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="tipo" class="form-label">Tipo</label>
-                            <select class="form-select" id="tipo" required>
-                                <option value="gerente">Gerente</option>
-                                <option value="professor">Professor</option>
-                                <option value="recepcionista">Recepcionista</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" required>
-                                <option value="ativo">Ativo</option>
-                                <option value="inativo">Inativo</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipo" required>
+                            <option value="">Selecione...</option>
+                            <option value="gerente">Gerente</option>
+                            <option value="recepcionista">Recepcionista</option>
+                            <option value="professor">Professor</option>
+                        </select>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="senha" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="senha">
-                            <small class="text-muted">
-                                Deixe em branco para manter a senha atual
-                            </small>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="confirmarSenha" class="form-label">
-                                Confirmar Senha
-                            </label>
-                            <input type="password" class="form-control" id="confirmarSenha">
-                        </div>
-                    </div>
-                    
-                    <!-- Campos específicos para professor -->
-                    <div id="camposProfessor" style="display: none;">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="especialidade" class="form-label">
-                                    Especialidade
-                                </label>
-                                <input type="text" class="form-control" id="especialidade">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="cref" class="form-label">CREF</label>
-                                <input type="text" class="form-control" id="cref">
-                            </div>
-                        </div>
+                    <div class="mb-3" id="divSenha">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha">
+                        <small class="text-muted">Deixe em branco para manter a senha atual</small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnSalvarUsuario">
-                    Salvar
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
             </div>
         </div>
     </div>
@@ -229,236 +148,147 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalNovoUsuario = new bootstrap.Modal(
-            document.getElementById('modalNovoUsuario')
-        );
+let usuarioAtual = null;
+
+// Carrega a lista de usuários ao carregar a página
+document.addEventListener('DOMContentLoaded', carregarUsuarios);
+
+// Função para carregar a lista de usuários
+async function carregarUsuarios() {
+    try {
+        const response = await fetch('/api/usuarios');
+        if (!response.ok) throw new Error('Erro ao carregar usuários');
+        const usuarios = await response.json();
         
-        // Preview da foto
-        document.getElementById('uploadFoto').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('fotoPreview').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+        const tbody = document.getElementById('tabelaUsuarios');
+        tbody.innerHTML = '';
+        
+        usuarios.forEach(usuario => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${usuario.nome}</td>
+                <td>${usuario.email}</td>
+                <td>${usuario.tipo.charAt(0).toUpperCase() + usuario.tipo.slice(1)}</td>
+                <td>
+                    <span class="badge ${usuario.status === 'ativo' ? 'bg-success' : 'bg-danger'}">
+                        ${usuario.status.charAt(0).toUpperCase() + usuario.status.slice(1)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editarUsuario(${usuario.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="excluirUsuario(${usuario.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
         });
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar usuários');
+    }
+}
+
+// Função para abrir o modal de cadastro
+function abrirModalUsuario() {
+    usuarioAtual = null;
+    document.getElementById('modalUsuarioTitulo').textContent = 'Novo Usuário';
+    document.getElementById('formUsuario').reset();
+    document.getElementById('usuarioId').value = '';
+    document.getElementById('divSenha').style.display = 'block';
+    document.getElementById('senha').required = true;
+    $('#modalUsuario').modal('show');
+}
+
+// Função para editar um usuário
+async function editarUsuario(id) {
+    try {
+        const response = await fetch(`/api/usuarios/${id}`);
+        if (!response.ok) throw new Error('Erro ao carregar usuário');
+        const usuario = await response.json();
         
-        // Mostrar/ocultar campos específicos do professor
-        document.getElementById('tipo').addEventListener('change', function(e) {
-            const camposProfessor = document.getElementById('camposProfessor');
-            camposProfessor.style.display = 
-                e.target.value === 'professor' ? 'block' : 'none';
-        });
+        usuarioAtual = usuario;
+        document.getElementById('modalUsuarioTitulo').textContent = 'Editar Usuário';
+        document.getElementById('usuarioId').value = usuario.id;
+        document.getElementById('nome').value = usuario.nome;
+        document.getElementById('email').value = usuario.email;
+        document.getElementById('tipo').value = usuario.tipo;
         
-        // Carregar usuários
-        async function carregarUsuarios() {
-            try {
-                const filtros = {
-                    nome: document.getElementById('filtroNome').value,
-                    tipo: document.getElementById('filtroTipo').value,
-                    status: document.getElementById('filtroStatus').value
-                };
-                
-                const queryString = new URLSearchParams(filtros).toString();
-                const response = await fetch(`/usuarios?${queryString}`);
-                const usuarios = await response.json();
-                
-                const listaUsuarios = document.getElementById('listaUsuarios');
-                listaUsuarios.innerHTML = '';
-                
-                usuarios.forEach(usuario => {
-                    const div = document.createElement('div');
-                    div.className = 'usuario-item';
-                    div.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex align-items-center">
-                                <img src="${usuario.foto_url || 'https://via.placeholder.com/40'}" 
-                                     alt="Foto de ${usuario.nome}"
-                                     class="rounded-circle me-3"
-                                     style="width: 40px; height: 40px; object-fit: cover;">
-                                <div>
-                                    <h5 class="mb-1">${usuario.nome}</h5>
-                                    <p class="mb-1">
-                                        <span class="badge bg-${
-                                            usuario.status === 'ativo' ? 'success' : 'danger'
-                                        } status-badge">
-                                            ${usuario.status}
-                                        </span>
-                                        <span class="badge bg-primary status-badge ms-2">
-                                            ${usuario.tipo}
-                                        </span>
-                                    </p>
-                                    <small class="text-muted">${usuario.email}</small>
-                                </div>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary btn-acao me-2"
-                                        onclick="editarUsuario(${usuario.id})">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao"
-                                        onclick="excluirUsuario(${usuario.id})">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    listaUsuarios.appendChild(div);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar usuários:', erro);
-            }
-        }
+        // Senha não é obrigatória na edição
+        document.getElementById('senha').required = false;
+        document.getElementById('divSenha').style.display = 'block';
         
-        // Salvar usuário
-        async function salvarUsuario() {
-            const senha = document.getElementById('senha').value;
-            const confirmarSenha = document.getElementById('confirmarSenha').value;
-            
-            if (senha && senha !== confirmarSenha) {
-                alert('As senhas não coincidem!');
-                return;
-            }
-            
-            const formData = new FormData();
-            const foto = document.getElementById('uploadFoto').files[0];
-            
-            if (foto) {
-                formData.append('foto', foto);
-            }
-            
-            const dados = {
-                nome: document.getElementById('nome').value,
-                email: document.getElementById('email').value,
-                tipo: document.getElementById('tipo').value,
-                status: document.getElementById('status').value
-            };
-            
-            if (senha) {
-                dados.senha = senha;
-            }
-            
-            if (dados.tipo === 'professor') {
-                dados.especialidade = document.getElementById('especialidade').value;
-                dados.cref = document.getElementById('cref').value;
-            }
-            
-            Object.entries(dados).forEach(([key, value]) => {
-                formData.append(key, value);
-            });
-            
-            const usuarioId = document.getElementById('usuarioId').value;
-            const method = usuarioId ? 'PUT' : 'POST';
-            const url = usuarioId ? `/usuarios/${usuarioId}` : '/usuarios';
-            
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    alert('Usuário salvo com sucesso!');
-                    modalNovoUsuario.hide();
-                    carregarUsuarios();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao salvar usuário');
-                }
-            } catch (erro) {
-                console.error('Erro ao salvar usuário:', erro);
-                alert('Erro ao salvar usuário');
-            }
-        }
-        
-        // Event Listeners
-        document.getElementById('btnSalvarUsuario').addEventListener('click', salvarUsuario);
-        
-        // Filtros
-        ['filtroNome', 'filtroTipo', 'filtroStatus'].forEach(id => {
-            const elemento = document.getElementById(id);
-            if (id === 'filtroNome') {
-                elemento.addEventListener('input', debounce(carregarUsuarios, 300));
-            } else {
-                elemento.addEventListener('change', carregarUsuarios);
-            }
-        });
-        
-        // Inicialização
-        carregarUsuarios();
-    });
-    
-    // Função de debounce
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+        $('#modalUsuario').modal('show');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar usuário');
+    }
+}
+
+// Função para salvar um usuário
+async function salvarUsuario() {
+    const form = document.getElementById('formUsuario');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
     }
     
-    // Funções globais
-    async function editarUsuario(id) {
-        try {
-            const response = await fetch(`/usuarios/${id}`);
-            const usuario = await response.json();
-            
-            document.getElementById('usuarioId').value = usuario.id;
-            document.getElementById('nome').value = usuario.nome;
-            document.getElementById('email').value = usuario.email;
-            document.getElementById('tipo').value = usuario.tipo;
-            document.getElementById('status').value = usuario.status;
-            
-            if (usuario.tipo === 'professor') {
-                document.getElementById('camposProfessor').style.display = 'block';
-                document.getElementById('especialidade').value = usuario.especialidade;
-                document.getElementById('cref').value = usuario.cref;
-            } else {
-                document.getElementById('camposProfessor').style.display = 'none';
-            }
-            
-            if (usuario.foto_url) {
-                document.getElementById('fotoPreview').src = usuario.foto_url;
-            }
-            
-            document.getElementById('senha').value = '';
-            document.getElementById('confirmarSenha').value = '';
-            
-            document.querySelector('#modalNovoUsuario .modal-title').textContent = 
-                'Editar Usuário';
-            new bootstrap.Modal(document.getElementById('modalNovoUsuario')).show();
-        } catch (erro) {
-            console.error('Erro ao carregar usuário:', erro);
-            alert('Erro ao carregar dados do usuário');
-        }
-    }
+    const id = document.getElementById('usuarioId').value;
+    const dados = {
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        tipo: document.getElementById('tipo').value,
+        senha: document.getElementById('senha').value
+    };
     
-    async function excluirUsuario(id) {
-        if (confirm('Tem certeza que deseja excluir este usuário?')) {
-            try {
-                const response = await fetch(`/usuarios/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('Usuário excluído com sucesso!');
-                    carregarUsuarios();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao excluir usuário');
-                }
-            } catch (erro) {
-                console.error('Erro ao excluir usuário:', erro);
-                alert('Erro ao excluir usuário');
-            }
+    try {
+        const url = id ? `/api/usuarios/${id}` : '/api/usuarios';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.erro || 'Erro ao salvar usuário');
         }
+        
+        $('#modalUsuario').modal('hide');
+        await carregarUsuarios();
+        alert(id ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert(error.message);
     }
+}
+
+// Função para excluir um usuário
+async function excluirUsuario(id) {
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+    
+    try {
+        const response = await fetch(`/api/usuarios/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.erro || 'Erro ao excluir usuário');
+        }
+        
+        await carregarUsuarios();
+        alert('Usuário excluído com sucesso!');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert(error.message);
+    }
+}
 </script>
 {% endblock %} 
