@@ -1,11 +1,26 @@
-from flask import Blueprint, jsonify, request, render_template, redirect, url_for
-from .models import (Usuario, Aluno, Plano, Pagamento, Professor, 
-                   Turma, Treino, db)
-from flask_login import login_required, current_user, login_user, logout_user
-from datetime import datetime, timedelta
+"""Rotas da aplicação."""
 
-# Criação do Blueprint para organizar as rotas
+import os
+from datetime import datetime
+from functools import wraps
+from flask import (
+    Blueprint, render_template, redirect, url_for,
+    request, jsonify, current_app, send_from_directory
+)
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
+from .models import db, Usuario, Aluno, Professor, Plano, Treino, Turma, Pagamento
+
 rotas = Blueprint('rotas', __name__)
+
+def gerente_required(f):
+    """Decorador para verificar se o usuário é gerente."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.tipo != 'gerente':
+            return redirect(url_for('rotas.index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @rotas.route('/')
