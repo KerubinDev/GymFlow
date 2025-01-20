@@ -345,7 +345,15 @@ class Treino(db.Model):
         return {
             'id': self.id,
             'aluno_id': self.aluno_id,
+            'aluno': {
+                'id': self.aluno.id,
+                'nome': self.aluno.nome
+            } if self.aluno else None,
             'professor_id': self.professor_id,
+            'professor': {
+                'id': self.professor.id,
+                'nome': self.professor.usuario.nome
+            } if self.professor else None,
             'tipo': self.tipo,
             'observacoes': self.observacoes,
             'status': self.status,
