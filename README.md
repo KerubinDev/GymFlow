@@ -1,136 +1,207 @@
-# GymFlow - Sistema de Gestão para Academias
+<div align="center">
 
-Sistema completo para gestão de academias desenvolvido em Python/Flask, oferecendo funcionalidades para gerenciamento de alunos, professores, treinos, turmas e pagamentos.
-
-## Funcionalidades
-
-- **Gestão de Usuários**
-  - Cadastro de gerentes, professores e recepcionistas
-  - Controle de acesso baseado em perfis
-  - Autenticação segura
-
-- **Gestão de Alunos**
-  - Cadastro completo com dados pessoais
-  - Histórico de treinos
-  - Controle de pagamentos
-  - Matrícula em turmas
-
-- **Gestão de Treinos**
-  - Criação de treinos personalizados
-  - Biblioteca de exercícios
-  - Acompanhamento de evolução
-  - Histórico de treinos
-
-- **Gestão de Turmas**
-  - Agendamento de aulas
-  - Controle de capacidade
-  - Diferentes modalidades
-  - Lista de presença
-
-- **Gestão Financeira**
-  - Controle de mensalidades
-  - Histórico de pagamentos
-  - Relatórios financeiros
-  - Status de inadimplência
-
-## Tecnologias Utilizadas
-
-- Python 3.8+
-- Flask (Framework Web)
-- SQLAlchemy (ORM)
-- Flask-Login (Autenticação)
-- Bootstrap 5 (Frontend)
-- Chart.js (Gráficos)
-- SQLite (Banco de Dados)
-
-## Instalação local
-
-1. Clone o repositório:
-```bash
-git clone https://github.com/seu-usuario/gymflow.git
-cd gymflow
+```
+ ▄████  ▄██   ▄   ▄▄▄▄███▄▄▄▄      ▄████████  ▄█        ▄██████▄   ▄█     █▄  
+███    ███   ██▄ ▄██▀▀▀███▀▀▀██▄   ███    ███ ███       ███    ███ ███     ███ 
+███    ███▄   ███▄███   ███   ███   ███    █▀  ███       ███    ███ ███     ███ 
+███    ▀▀▀▀   ███▀███   ███   ███  ▄███▄▄▄     ███       ███    ███ ███     ███ 
+███        ▄███▀███   ███   ███ ▀▀███▀▀▀     ███       ███    ███ ███     ███ 
+███    █▄  ███   ███   ███   ███   ███    █▄  ███       ███    ███ ███     ███ 
+███    ███ ███   ███   ███   ███   ███    ███ ███▌    ▄ ███    ███ ███ ▄█▄ ███ 
+████████▀  ███   ███   ███   █▀    ██████████ █████▄▄██  ▀██████▀   ▀███▀███▀  
 ```
 
-2. Crie um ambiente virtual e ative-o:
+<h3>🏋️‍♂️ Sistema Inteligente de Gestão para Academias</h3>
+
+[![Tech Stack](https://img.shields.io/badge/Tech%20Stack-Python%20%7C%20Flask-4B8BBE?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Framework](https://img.shields.io/badge/Framework-Bootstrap%205-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
+[![Database](https://img.shields.io/badge/Database-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
+
+[📋 Sobre](#-sobre) • 
+[💪 Recursos](#-recursos) • 
+[🛠️ Tecnologias](#️-tecnologias) • 
+[🚀 Instalação](#-instalação) • 
+[📱 Demo](#-demo)
+
+</div>
+
+## 📋 Sobre
+
+<div align="center">
+
+```mermaid
+graph TD
+    A[GymFlow] --> B[Gestão de Usuários]
+    A --> C[Gestão de Alunos]
+    A --> D[Gestão de Treinos]
+    A --> E[Gestão de Turmas]
+    A --> F[Gestão Financeira]
+    
+    B --> B1[Perfis]
+    B --> B2[Autenticação]
+    
+    C --> C1[Matrículas]
+    C --> C2[Histórico]
+    
+    D --> D1[Exercícios]
+    D --> D2[Evolução]
+    
+    E --> E1[Aulas]
+    E --> E2[Presença]
+    
+    F --> F1[Pagamentos]
+    F --> F2[Relatórios]
+
+    style A fill:#ff9900,stroke:#fff,stroke-width:2px
+    style B fill:#4B8BBE,stroke:#fff,stroke-width:2px
+    style C fill:#4B8BBE,stroke:#fff,stroke-width:2px
+    style D fill:#4B8BBE,stroke:#fff,stroke-width:2px
+    style E fill:#4B8BBE,stroke:#fff,stroke-width:2px
+    style F fill:#4B8BBE,stroke:#fff,stroke-width:2px
+```
+
+</div>
+
+## 💪 Recursos
+
+<table align="center">
+  <tr>
+    <td align="center" width="33%">
+      <img width="64" src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/PersonalTrainer.svg" alt="Gestão de Alunos"/>
+      <br/><strong>Gestão de Alunos</strong>
+      <br/>Sistema completo de cadastro e acompanhamento
+      <br/>
+      <sub>• Fichas completas<br/>• Evolução física<br/>• Histórico de treinos</sub>
+    </td>
+    <td align="center" width="33%">
+      <img width="64" src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Workout.svg" alt="Gestão de Treinos"/>
+      <br/><strong>Gestão de Treinos</strong>
+      <br/>Planejamento e acompanhamento de treinos
+      <br/>
+      <sub>• Exercícios personalizados<br/>• Séries adaptativas<br/>• Métricas de progresso</sub>
+    </td>
+    <td align="center" width="33%">
+      <img width="64" src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Money.svg" alt="Gestão Financeira"/>
+      <br/><strong>Gestão Financeira</strong>
+      <br/>Controle completo de pagamentos
+      <br/>
+      <sub>• Mensalidades<br/>• Relatórios detalhados<br/>• Controle de inadimplência</sub>
+    </td>
+  </tr>
+</table>
+
+## 🛠️ Stack Tecnológica
+
+<div align="center">
+
+| Back-end | Front-end | Database | DevOps |
+|----------|-----------|----------|---------|
+| ![Python](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Python-Dark.svg) | ![Bootstrap](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Bootstrap.svg) | ![SQLite](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/SQLite.svg) | ![Git](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Git.svg) |
+| ![Flask](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Flask-Dark.svg) | ![JavaScript](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/JavaScript.svg) | ![SQLAlchemy](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/MySQL-Dark.svg) | ![Docker](https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Docker.svg) |
+
+</div>
+
+## 🚀 Instalação
+
+<details>
+<summary>💻 Instalação Local</summary>
+
 ```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/gymflow.git && cd gymflow
+
+# Configure o ambiente virtual
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-venv\\Scripts\\activate   # Windows
-```
+venv\Scripts\activate     # Windows
 
-3. Instale as dependências:
-```bash
+# Instale as dependências
 pip install -r requirements.txt
-```
 
-4. Configure as variáveis de ambiente:
-```bash
+# Configure o ambiente
 cp .env.example .env
-# Edite o arquivo .env com suas configurações
-```
 
-5. Inicialize o banco de dados:
-```bash
+# Inicialize o banco
 flask db upgrade
+```
+</details>
+
+<details>
+<summary>☁️ GitHub Codespaces</summary>
+
+```bash
+# Inicie diretamente com
 python run.py
 ```
+</details>
 
-## Instalação codespace
+## 🔐 Acessos
 
-1. rode o programa
-```bash
-python tun.py
+<div align="center">
+
+| Perfil | Credenciais | Permissões |
+|--------|-------------|------------|
+| 🎖️ **Admin** | admin@gymflow.com<br>admin123 | Acesso total |
+| 💪 **Professor** | prof@gymflow.com<br>prof123 | Treinos e alunos |
+| 📋 **Recepção** | recepcao@gymflow.com<br>recepcao123 | Cadastros e pagamentos |
+
+</div>
+
+## 📂 Estrutura
+
+```plaintext
+🏋️ GymFlow/
+├── 🎯 backend/
+│   ├── 📊 models/
+│   ├── 🛣️ routes/
+│   └── ⚙️ utils/
+├── 🎨 frontend/
+│   ├── 📱 assets/
+│   └── 📄 templates/
+├── 🔒 config/
+└── 📚 docs/
 ```
 
-## Uso
+## 🤝 Contribuição
 
-1. Acesse o sistema através do navegador: `http://localhost:5000`
-2. Faça login com as credenciais padrão:
-   - Email: admin@gymflow.com
-   - Senha: admin123
-
-## Estrutura do Projeto
-
-```
-gymflow/
-├── backend/
-│   ├── __init__.py
-│   ├── models.py
-│   └── routes.py
-├── migrations/
-├── static/
-│   ├── css/
-│   └── js/
-├── templates/
-├── instance/
-├── .env
-├── .gitignore
-├── requirements.txt
-└── run.py
+```mermaid
+gitGraph
+   commit
+   commit
+   branch feature
+   checkout feature
+   commit
+   commit
+   checkout main
+   merge feature
+   commit
 ```
 
-## Contribuição
+1. Fork
+2. Branch (`git checkout -b feature/NewFeature`)
+3. Commit (`git commit -m 'Add: nova feature'`)
+4. Push (`git push origin feature/NewFeature`)
+5. PR
 
-1. Faça um Fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+## 👨‍💻 Autor
 
-## Licença
+<div align="center">
+  <img width="200" height="200" src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Github-Dark.svg">
+  <h3>Kelvin Moraes</h3>
+  <p>Full Stack Developer | Fitness Enthusiast</p>
+  
+[![GitHub](https://img.shields.io/badge/GitHub-KerubinDev-181717?style=for-the-badge&logo=github)](https://github.com/KerubinDev)
+[![Email](https://img.shields.io/badge/Email-kelvin.moraes117@gmail.com-EA4335?style=for-the-badge&logo=gmail)](mailto:kelvin.moraes117@gmail.com)
+</div>
 
-Este projeto está licenciado sob a GNU General Public License v3.0 - veja o arquivo [LICENSE](LICENSE) para detalhes.
+---
 
-## Autor
-
-**Kelvin Moraes (Kerubin)**
-- Email: kelvin.moraes117@gmail.com
-- GitHub: [@KerubinDev](https://github.com/KerubinDev)
-- Projeto: [GymFlow](https://github.com/KerubinDev/GymFlow)
-
-## Agradecimentos
-
-- [Bootstrap](https://getbootstrap.com)
-- [Chart.js](https://www.chartjs.org)
-- [Flask](https://flask.palletsprojects.com)
-- [Font Awesome](https://fontawesome.com)
+<div align="center">
+  
+  **[⬆ Voltar ao topo](#gymflow---sistema-de-gestão-para-academias)**
+  
+  <sub>Desenvolvido com 💪 por Kelvin Moraes</sub>
+  
+[![Stack](https://img.shields.io/badge/Stack-Python%20%7C%20Flask%20%7C%20Bootstrap-000000?style=for-the-badge)](https://github.com/KerubinDev/GymFlow)
+</div>
