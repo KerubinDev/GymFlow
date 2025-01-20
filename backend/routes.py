@@ -440,3 +440,111 @@ def listar_planos_disponiveis():
     """API para listar planos disponíveis."""
     planos = Plano.query.filter_by(ativo=True).all()
     return jsonify([plano.to_dict() for plano in planos])
+
+
+@rotas.route('/api/alunos', methods=['GET'])
+@login_required
+def listar_alunos():
+    """API para listar alunos."""
+    alunos = Aluno.query.all()
+    return jsonify([aluno.to_dict() for aluno in alunos])
+
+
+@rotas.route('/api/alunos', methods=['POST'])
+@login_required
+def criar_aluno():
+    """API para criar um novo aluno."""
+    dados = request.get_json()
+    
+    try:
+        # Converte a data de string para objeto date
+        data_nascimento = datetime.strptime(dados['data_nascimento'], '%Y-%m-%d').date()
+        
+        aluno = Aluno(
+            nome=dados['nome'],
+            email=dados['email'],
+            cpf=dados['cpf'],
+            telefone=dados['telefone'],
+            data_nascimento=data_nascimento,
+            endereco=dados.get('endereco'),
+            altura=float(dados.get('altura', 0)) if dados.get('altura') else None,
+            peso=float(dados.get('peso', 0)) if dados.get('peso') else None,
+            objetivo=dados.get('objetivo'),
+            observacoes=dados.get('observacoes'),
+            plano_id=int(dados['plano_id']) if dados.get('plano_id') else None,
+            status='ativo'
+        )
+        
+        db.session.add(aluno)
+        db.session.commit()
+        
+        return jsonify(aluno.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/alunos/<int:aluno_id>', methods=['PUT'])
+@login_required
+def atualizar_aluno(aluno_id):
+    """API para atualizar um aluno existente."""
+    aluno = Aluno.query.get_or_404(aluno_id)
+    dados = request.get_json()
+    
+    try:
+        if 'nome' in dados:
+            aluno.nome = dados['nome']
+        if 'email' in dados:
+            aluno.email = dados['email']
+        if 'cpf' in dados:
+            aluno.cpf = dados['cpf']
+        if 'telefone' in dados:
+            aluno.telefone = dados['telefone']
+        if 'data_nascimento' in dados:
+            aluno.data_nascimento = datetime.strptime(dados['data_nascimento'], '%Y-%m-%d').date()
+        if 'endereco' in dados:
+            aluno.endereco = dados['endereco']
+        if 'altura' in dados:
+            aluno.altura = float(dados['altura']) if dados['altura'] else None
+        if 'peso' in dados:
+            aluno.peso = float(dados['peso']) if dados['peso'] else None
+        if 'objetivo' in dados:
+            aluno.objetivo = dados['objetivo']
+        if 'observacoes' in dados:
+            aluno.observacoes = dados['observacoes']
+        if 'plano_id' in dados:
+            aluno.plano_id = int(dados['plano_id']) if dados['plano_id'] else None
+        if 'status' in dados:
+            aluno.status = dados['status']
+        
+        db.session.commit()
+        return jsonify(aluno.to_dict())
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/alunos/<int:aluno_id>', methods=['DELETE'])
+@login_required
+def deletar_aluno(aluno_id):
+    """API para deletar um aluno."""
+    aluno = Aluno.query.get_or_404(aluno_id)
+    
+    try:
+        db.session.delete(aluno)
+        db.session.commit()
+        return '', 204
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/alunos/<int:aluno_id>', methods=['GET'])
+@login_required
+def obter_aluno(aluno_id):
+    """API para obter detalhes de um aluno específico."""
+    aluno = Aluno.query.get_or_404(aluno_id)
+    return jsonify(aluno.to_dict())

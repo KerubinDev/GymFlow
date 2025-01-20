@@ -260,21 +260,20 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/imask/6.4.3/imask.min.js"></script>
+<!-- jQuery Mask Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 <script>
+    // Aplica máscaras nos campos
+    $(document).ready(function() {
+        $('#cpf').mask('000.000.000-00');
+        $('#telefone').mask('(00) 00000-0000');
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         const modalNovoAluno = new bootstrap.Modal(
             document.getElementById('modalNovoAluno')
         );
-        
-        // Máscaras para campos
-        IMask(document.getElementById('cpf'), {
-            mask: '000.000.000-00'
-        });
-        
-        IMask(document.getElementById('telefone'), {
-            mask: '(00) 00000-0000'
-        });
         
         // Preview da foto
         document.getElementById('uploadFoto').addEventListener('change', function(e) {
@@ -312,72 +311,45 @@
         // Carregar alunos
         async function carregarAlunos() {
             try {
-                const filtros = {
-                    nome: document.getElementById('filtroNome').value,
-                    plano: document.getElementById('filtroPlano').value,
-                    status: document.getElementById('filtroStatus').value,
-                    vencimento: document.getElementById('filtroVencimento').value
-                };
+                const response = await fetch('/api/alunos');
+                if (!response.ok) throw new Error('Erro ao carregar alunos');
                 
-                const queryString = new URLSearchParams(filtros).toString();
-                const response = await fetch(`/alunos?${queryString}`);
                 const alunos = await response.json();
-                
-                const listaAlunos = document.getElementById('listaAlunos');
-                listaAlunos.innerHTML = '';
+                const tbody = document.querySelector('table tbody');
+                tbody.innerHTML = '';
                 
                 alunos.forEach(aluno => {
-                    const div = document.createElement('div');
-                    div.className = 'aluno-item';
-                    div.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="mb-1">${aluno.nome}</h5>
-                                <p class="mb-1">
-                                    <span class="badge bg-${
-                                        aluno.status === 'ativo' ? 'success' : 
-                                        aluno.status === 'inativo' ? 'danger' : 'warning'
-                                    } status-badge">
-                                        ${aluno.status}
-                                    </span>
-                                    <small class="text-muted ms-2">
-                                        Plano: ${aluno.plano.nome}
-                                    </small>
-                                    <small class="text-muted ms-2">
-                                        Vencimento: ${new Date(aluno.vencimento).toLocaleDateString()}
-                                    </small>
-                                </p>
-                                <small class="text-muted">
-                                    ${aluno.email} | ${aluno.telefone}
-                                </small>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary btn-acao me-2"
-                                        onclick="editarAluno(${aluno.id})">
-                                    <i class="bi bi-pencil"></i>
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${aluno.nome}</td>
+                            <td>${aluno.email}</td>
+                            <td>${aluno.cpf}</td>
+                            <td>${aluno.telefone || '-'}</td>
+                            <td>
+                                <span class="badge ${aluno.status === 'ativo' ? 'bg-success' : 'bg-danger'}">
+                                    ${aluno.status}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2" onclick="editarAluno(${aluno.id})">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao"
-                                        onclick="excluirAluno(${aluno.id})">
-                                    <i class="bi bi-trash"></i>
+                                <button class="btn btn-sm btn-outline-danger" onclick="excluirAluno(${aluno.id})">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     `;
-                    listaAlunos.appendChild(div);
                 });
             } catch (erro) {
                 console.error('Erro ao carregar alunos:', erro);
+                alert('Erro ao carregar alunos');
             }
         }
         
         // Salvar aluno
-        async function salvarAluno() {
-            const formData = new FormData();
-            const foto = document.getElementById('uploadFoto').files[0];
-            
-            if (foto) {
-                formData.append('foto', foto);
-            }
+        async function salvarAluno(event) {
+            event.preventDefault();
             
             const dados = {
                 nome: document.getElementById('nome').value,
@@ -385,39 +357,39 @@
                 cpf: document.getElementById('cpf').value,
                 telefone: document.getElementById('telefone').value,
                 data_nascimento: document.getElementById('dataNascimento').value,
-                plano_id: document.getElementById('plano').value,
                 endereco: document.getElementById('endereco').value,
                 altura: document.getElementById('altura').value,
                 peso: document.getElementById('peso').value,
                 objetivo: document.getElementById('objetivo').value,
-                observacoes: document.getElementById('observacoes').value
+                plano_id: document.getElementById('plano').value,
+                observacoes: document.getElementById('observacoes')?.value
             };
-            
-            Object.entries(dados).forEach(([key, value]) => {
-                formData.append(key, value);
-            });
-            
-            const alunoId = document.getElementById('alunoId').value;
-            const method = alunoId ? 'PUT' : 'POST';
-            const url = alunoId ? `/alunos/${alunoId}` : '/alunos';
-            
+
             try {
-                const response = await fetch(url, {
-                    method: method,
-                    body: formData
+                const response = await fetch('/api/alunos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
                 });
-                
-                if (response.ok) {
-                    alert('Aluno salvo com sucesso!');
-                    modalNovoAluno.hide();
-                    carregarAlunos();
-                } else {
+
+                if (!response.ok) {
                     const erro = await response.json();
-                    alert(erro.erro || 'Erro ao salvar aluno');
+                    throw new Error(erro.erro || 'Erro ao salvar aluno');
                 }
+
+                alert('Aluno cadastrado com sucesso!');
+                document.getElementById('formAluno').reset();
+                carregarAlunos();
+                
+                // Fecha o modal se estiver usando
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovoAluno'));
+                if (modal) modal.hide();
+
             } catch (erro) {
                 console.error('Erro ao salvar aluno:', erro);
-                alert('Erro ao salvar aluno');
+                alert(erro.message);
             }
         }
         
@@ -455,53 +427,53 @@
     // Funções globais
     async function editarAluno(id) {
         try {
-            const response = await fetch(`/alunos/${id}`);
+            const response = await fetch(`/api/alunos/${id}`);
+            if (!response.ok) throw new Error('Erro ao carregar aluno');
+            
             const aluno = await response.json();
             
+            // Preenche o formulário com os dados do aluno
             document.getElementById('alunoId').value = aluno.id;
             document.getElementById('nome').value = aluno.nome;
             document.getElementById('email').value = aluno.email;
             document.getElementById('cpf').value = aluno.cpf;
-            document.getElementById('telefone').value = aluno.telefone;
+            document.getElementById('telefone').value = aluno.telefone || '';
             document.getElementById('dataNascimento').value = aluno.data_nascimento;
-            document.getElementById('plano').value = aluno.plano_id;
-            document.getElementById('endereco').value = aluno.endereco;
-            document.getElementById('altura').value = aluno.altura;
-            document.getElementById('peso').value = aluno.peso;
-            document.getElementById('objetivo').value = aluno.objetivo;
-            document.getElementById('observacoes').value = aluno.observacoes;
-            
-            if (aluno.foto_url) {
-                document.getElementById('fotoPreview').src = aluno.foto_url;
+            document.getElementById('endereco').value = aluno.endereco || '';
+            document.getElementById('altura').value = aluno.altura || '';
+            document.getElementById('peso').value = aluno.peso || '';
+            document.getElementById('objetivo').value = aluno.objetivo || '';
+            document.getElementById('plano').value = aluno.plano_id || '';
+            if (document.getElementById('observacoes')) {
+                document.getElementById('observacoes').value = aluno.observacoes || '';
             }
             
-            document.querySelector('#modalNovoAluno .modal-title').textContent = 
-                'Editar Aluno';
-            new bootstrap.Modal(document.getElementById('modalNovoAluno')).show();
+            // Mostra o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalNovoAluno'));
+            modal.show();
+            
         } catch (erro) {
             console.error('Erro ao carregar aluno:', erro);
-            alert('Erro ao carregar dados do aluno');
+            alert('Erro ao carregar aluno');
         }
     }
     
     async function excluirAluno(id) {
-        if (confirm('Tem certeza que deseja excluir este aluno?')) {
-            try {
-                const response = await fetch(`/alunos/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('Aluno excluído com sucesso!');
-                    carregarAlunos();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao excluir aluno');
-                }
-            } catch (erro) {
-                console.error('Erro ao excluir aluno:', erro);
-                alert('Erro ao excluir aluno');
-            }
+        if (!confirm('Tem certeza que deseja excluir este aluno?')) return;
+        
+        try {
+            const response = await fetch(`/api/alunos/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) throw new Error('Erro ao excluir aluno');
+            
+            alert('Aluno excluído com sucesso!');
+            carregarAlunos();
+            
+        } catch (erro) {
+            console.error('Erro ao excluir aluno:', erro);
+            alert('Erro ao excluir aluno');
         }
     }
 
