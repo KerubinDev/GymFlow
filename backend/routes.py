@@ -835,11 +835,11 @@ def listar_professores():
         professores = Professor.query.filter_by(status='ativo').all()
         return jsonify([{
             'id': professor.id,
-            'nome': professor.usuario.nome,
-            'email': professor.usuario.email,
+            'nome': professor.usuario.nome if professor.usuario else '',
+            'email': professor.usuario.email if professor.usuario else '',
             'telefone': professor.telefone,
             'especialidades': professor.especialidades,
-            'ativo': True
+            'ativo': professor.status == 'ativo'
         } for professor in professores])
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
