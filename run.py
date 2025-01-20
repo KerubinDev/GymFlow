@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask
 from backend import create_app, db
-from backend.models import Usuario, Plano, Professor
+from backend.models import Usuario, Aluno, Professor, Plano, Treino, Exercicio, Turma, MatriculaTurma, Pagamento
 from werkzeug.security import generate_password_hash
 
 # Carregar variáveis de ambiente

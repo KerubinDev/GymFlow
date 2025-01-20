@@ -167,7 +167,14 @@ def usuarios():
     return render_template('cadastro_usuarios.html')
 
 
-# API Routes
+@rotas.route('/planos')
+@login_required
+@gerente_required
+def planos():
+    """Rota para listar e gerenciar planos."""
+    planos = Plano.query.all()
+    return render_template('planos.html', planos=planos)
+
 
 @rotas.route('/api/login', methods=['POST'])
 def api_login():
@@ -332,3 +339,78 @@ def api_inativar_usuario(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'mensagem': str(e)}), 400
+
+
+@rotas.route('/api/planos', methods=['POST'])
+@login_required
+@gerente_required
+def criar_plano():
+    """API para criar um novo plano."""
+    dados = request.get_json()
+    
+    try:
+        plano = Plano(
+            nome=dados['nome'],
+            descricao=dados.get('descricao'),
+            valor=float(dados['valor']),
+            duracao_meses=int(dados['duracao_meses']),
+            ativo=True
+        )
+        
+        db.session.add(plano)
+        db.session.commit()
+        
+        return jsonify(plano.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/planos/<int:plano_id>', methods=['PUT'])
+@login_required
+@gerente_required
+def atualizar_plano(plano_id):
+    """API para atualizar um plano existente."""
+    plano = Plano.query.get_or_404(plano_id)
+    dados = request.get_json()
+    
+    try:
+        plano.nome = dados.get('nome', plano.nome)
+        plano.descricao = dados.get('descricao', plano.descricao)
+        plano.valor = float(dados.get('valor', plano.valor))
+        plano.duracao_meses = int(dados.get('duracao_meses', plano.duracao_meses))
+        plano.ativo = dados.get('ativo', plano.ativo)
+        
+        db.session.commit()
+        return jsonify(plano.to_dict())
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/planos/<int:plano_id>', methods=['DELETE'])
+@login_required
+@gerente_required
+def deletar_plano(plano_id):
+    """API para deletar um plano."""
+    plano = Plano.query.get_or_404(plano_id)
+    
+    try:
+        db.session.delete(plano)
+        db.session.commit()
+        return '', 204
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/planos/<int:plano_id>', methods=['GET'])
+@login_required
+@gerente_required
+def obter_plano(plano_id):
+    """API para obter detalhes de um plano específico."""
+    plano = Plano.query.get_or_404(plano_id)
+    return jsonify(plano.to_dict())

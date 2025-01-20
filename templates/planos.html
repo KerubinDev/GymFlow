@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciamento de Planos - GymFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Gerenciamento de Planos</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPlano">
+            <i class="fas fa-plus me-2"></i>Novo Plano
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Duração</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plano in planos %}
+                        <tr>
+                            <td>{{ plano.nome }}</td>
+                            <td>{{ plano.descricao or '-' }}</td>
+                            <td>R$ {{ "%.2f"|format(plano.valor) }}</td>
+                            <td>{{ plano.duracao_meses }} meses</td>
+                            <td>
+                                <span class="badge {% if plano.ativo %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ 'Ativo' if plano.ativo else 'Inativo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-2" 
+                                        onclick="editarPlano({{ plano.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="deletarPlano({{ plano.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Plano -->
+<div class="modal fade" id="modalPlano" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPlanoLabel">Novo Plano</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPlano">
+                    <input type="hidden" id="planoId">
+                    
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="number" class="form-control" id="valor" step="0.01" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duracao_meses" class="form-label">Duração (meses)</label>
+                        <input type="number" class="form-control" id="duracao_meses" min="1" required>
+                    </div>
+                    
+                    <div class="mb-3" id="divStatus" style="display: none;">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="ativo" checked>
+                            <label class="form-check-label" for="ativo">Plano Ativo</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarPlano()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const modalPlano = new bootstrap.Modal(document.getElementById('modalPlano'));
+const formPlano = document.getElementById('formPlano');
+
+function limparFormulario() {
+    formPlano.reset();
+    document.getElementById('planoId').value = '';
+    document.getElementById('modalPlanoLabel').textContent = 'Novo Plano';
+    document.getElementById('divStatus').style.display = 'none';
+}
+
+async function salvarPlano() {
+    const planoId = document.getElementById('planoId').value;
+    const dados = {
+        nome: document.getElementById('nome').value,
+        descricao: document.getElementById('descricao').value,
+        valor: parseFloat(document.getElementById('valor').value),
+        duracao_meses: parseInt(document.getElementById('duracao_meses').value)
+    };
+    
+    if (planoId) {
+        dados.ativo = document.getElementById('ativo').checked;
+    }
+    
+    try {
+        const response = await fetch(
+            planoId ? `/api/planos/${planoId}` : '/api/planos',
+            {
+                method: planoId ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            }
+        );
+        
+        if (!response.ok) {
+            throw new Error('Erro ao salvar plano');
+        }
+        
+        modalPlano.hide();
+        window.location.reload();
+        
+    } catch (erro) {
+        console.error('Erro:', erro);
+        alert('Erro ao salvar plano');
+    }
+}
+
+async function editarPlano(id) {
+    try {
+        const response = await fetch(`/api/planos/${id}`);
+        const plano = await response.json();
+        
+        document.getElementById('planoId').value = plano.id;
+        document.getElementById('nome').value = plano.nome;
+        document.getElementById('descricao').value = plano.descricao || '';
+        document.getElementById('valor').value = plano.valor;
+        document.getElementById('duracao_meses').value = plano.duracao_meses;
+        document.getElementById('ativo').checked = plano.ativo;
+        
+        document.getElementById('modalPlanoLabel').textContent = 'Editar Plano';
+        document.getElementById('divStatus').style.display = 'block';
+        
+        modalPlano.show();
+        
+    } catch (erro) {
+        console.error('Erro:', erro);
+        alert('Erro ao carregar plano');
+    }
+}
+
+async function deletarPlano(id) {
+    if (!confirm('Tem certeza que deseja excluir este plano?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/planos/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao excluir plano');
+        }
+        
+        window.location.reload();
+        
+    } catch (erro) {
+        console.error('Erro:', erro);
+        alert('Erro ao excluir plano');
+    }
+}
+
+// Limpa o formulário quando o modal é fechado
+document.getElementById('modalPlano').addEventListener('hidden.bs.modal', limparFormulario);
+</script>
+{% endblock %} 

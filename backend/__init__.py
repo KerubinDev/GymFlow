@@ -1,6 +1,7 @@
 """Inicialização da aplicação Flask."""
 
 import os
+from datetime import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -65,7 +66,6 @@ def create_app(config_name=None):
         return Usuario.query.get(int(user_id))
     
     # Adiciona contexto global para templates
-    from datetime import datetime
     @app.context_processor
     def utility_processor():
         return {

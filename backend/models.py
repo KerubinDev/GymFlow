@@ -190,7 +190,7 @@ class Aluno(db.Model):
     plano_id = db.Column(
         db.Integer,
         db.ForeignKey('planos.id'),
-        nullable=False
+        nullable=True
     )
     treinos = db.relationship('Treino', backref='aluno', lazy=True)
     pagamentos = db.relationship('Pagamento', backref='aluno', lazy=True)
@@ -223,47 +223,36 @@ class Aluno(db.Model):
 
 
 class Plano(db.Model):
-    """Modelo para planos da academia."""
+    """Modelo para representar os planos disponíveis na academia."""
+    
     __tablename__ = 'planos'
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
     valor = db.Column(db.Float, nullable=False)
-    duracao_meses = db.Column(db.Integer, nullable=False)
-    modalidades = db.Column(db.String(200))  # Lista de modalidades separadas por vírgula
-    status = db.Column(
-        db.Enum('ativo', 'inativo', name='status_plano'),
-        default='ativo',
-        nullable=False
-    )
-    data_criacao = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        nullable=False
-    )
-    ultima_atualizacao = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False
-    )
-    
+    duracao_meses = db.Column(db.Integer, nullable=False)  # Duração em meses
+    ativo = db.Column(db.Boolean, default=True)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Relacionamentos
     alunos = db.relationship('Aluno', backref='plano', lazy=True)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Converte o objeto para dicionário."""
+
+    def __repr__(self):
+        return f'<Plano {self.nome}>'
+
+    def to_dict(self):
+        """Converte o objeto em um dicionário."""
         return {
             'id': self.id,
             'nome': self.nome,
             'descricao': self.descricao,
             'valor': self.valor,
             'duracao_meses': self.duracao_meses,
-            'modalidades': self.modalidades,
-            'status': self.status,
-            'data_criacao': self.data_criacao.isoformat(),
-            'ultima_atualizacao': self.ultima_atualizacao.isoformat()
+            'ativo': self.ativo,
+            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
+            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
 
 
