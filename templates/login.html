@@ -1,83 +1,172 @@
-{% extends "base.html" %}
-
-{% block title %}Login - GymFlow{% endblock %}
-
-{% block extra_css %}
-<style>
-    .login-container {
-        max-width: 400px;
-        margin: 100px auto;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GymFlow</title>
     
-    .logo {
-        text-align: center;
-        margin-bottom: 30px;
-    }
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    .form-group {
-        margin-bottom: 20px;
-    }
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    .esqueci-senha {
-        text-align: right;
-        margin-bottom: 20px;
-    }
-    
-    .btn-entrar {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        font-weight: bold;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="login-container bg-white">
-    <div class="logo">
-        <h2>GymFlow</h2>
-        <p class="text-muted">Sistema de Gestão de Academia</p>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1e21 0%, #2c3e50 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            color: #fff;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo i {
+            font-size: 3rem;
+            color: #4ECDC4;
+            margin-bottom: 1rem;
+        }
+        
+        .logo h2 {
+            color: #4ECDC4;
+            margin: 0;
+        }
+        
+        .logo p {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4ECDC4;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(78, 205, 196, 0.25);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .btn-primary {
+            background: #4ECDC4;
+            border-color: #4ECDC4;
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: #45B7AF;
+            border-color: #45B7AF;
+        }
+        
+        .esqueci-senha {
+            text-align: right;
+            margin-bottom: 1.5rem;
+        }
+        
+        .esqueci-senha a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .esqueci-senha a:hover {
+            color: #4ECDC4;
+        }
+        
+        .alert {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-dumbbell"></i>
+            <h2>GymFlow</h2>
+            <p>Sistema de Gestão de Academia</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form id="formLogin" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" 
+                       class="form-control" 
+                       id="email" 
+                       name="email"
+                       required>
+            </div>
+            
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" 
+                       class="form-control" 
+                       id="senha" 
+                       name="senha"
+                       required>
+            </div>
+            
+            <div class="esqueci-senha">
+                <a href="#" id="btnEsqueciSenha">Esqueci minha senha</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                Entrar
+            </button>
+        </form>
     </div>
-    
-    <form id="formLogin">
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" 
-                   class="form-control" 
-                   id="email" 
-                   name="email"
-                   required>
-        </div>
-        
-        <div class="form-group">
-            <label for="senha">Senha</label>
-            <input type="password" 
-                   class="form-control" 
-                   id="senha" 
-                   name="senha"
-                   required>
-        </div>
-        
-        <div class="esqueci-senha">
-            <a href="#" id="btnEsqueciSenha">Esqueci minha senha</a>
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-entrar">
-            Entrar
-        </button>
-    </form>
     
     <!-- Modal Recuperação de Senha -->
     <div class="modal fade" id="modalRecuperarSenha" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header border-secondary">
                     <h5 class="modal-title">Recuperar Senha</h5>
                     <button type="button" 
-                            class="btn-close" 
+                            class="btn-close btn-close-white" 
                             data-bs-dismiss="modal">
                     </button>
                 </div>
@@ -94,7 +183,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-secondary">
                     <button type="button" 
                             class="btn btn-secondary" 
                             data-bs-dismiss="modal">
@@ -109,83 +198,84 @@
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formLogin = document.getElementById('formLogin');
+            const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+            const modalRecuperarSenha = new bootstrap.Modal(
+                document.getElementById('modalRecuperarSenha')
+            );
+            const btnEnviarRecuperacao = document.getElementById(
+                'btnEnviarRecuperacao'
+            );
 
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const formLogin = document.getElementById('formLogin');
-        const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
-        const modalRecuperarSenha = new bootstrap.Modal(
-            document.getElementById('modalRecuperarSenha')
-        );
-        const btnEnviarRecuperacao = document.getElementById(
-            'btnEnviarRecuperacao'
-        );
+            formLogin.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const dados = {
+                    email: document.getElementById('email').value,
+                    senha: document.getElementById('senha').value,
+                    csrf_token: document.querySelector('[name=csrf_token]').value
+                };
 
-        formLogin.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const dados = {
-                email: document.getElementById('email').value,
-                senha: document.getElementById('senha').value
-            };
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': dados.csrf_token
+                        },
+                        body: JSON.stringify(dados)
+                    });
 
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
+                    const resultado = await response.json();
 
-                const resultado = await response.json();
-
-                if (response.ok) {
-                    // Armazena o token e redireciona
-                    localStorage.setItem('token', resultado.token);
-                    window.location.href = resultado.redirect;
-                } else {
-                    alert(resultado.erro || 'Erro ao fazer login');
+                    if (response.ok) {
+                        window.location.href = resultado.redirect;
+                    } else {
+                        alert(resultado.erro || 'Erro ao fazer login');
+                    }
+                } catch (erro) {
+                    console.error('Erro:', erro);
+                    alert('Erro ao fazer login');
                 }
-            } catch (erro) {
-                console.error('Erro:', erro);
-                alert('Erro ao fazer login');
-            }
-        });
+            });
 
-        btnEsqueciSenha.addEventListener('click', function(e) {
-            e.preventDefault();
-            modalRecuperarSenha.show();
-        });
+            btnEsqueciSenha.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalRecuperarSenha.show();
+            });
 
-        btnEnviarRecuperacao.addEventListener('click', async function() {
-            const email = document.getElementById('emailRecuperacao').value;
+            btnEnviarRecuperacao.addEventListener('click', async function() {
+                const email = document.getElementById('emailRecuperacao').value;
 
-            try {
-                const response = await fetch('/recuperar-senha', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email })
-                });
+                try {
+                    const response = await fetch('/recuperar-senha', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrf_token]').value
+                        },
+                        body: JSON.stringify({ email })
+                    });
 
-                const resultado = await response.json();
+                    const resultado = await response.json();
 
-                if (response.ok) {
-                    alert('Email de recuperação enviado com sucesso!');
-                    modalRecuperarSenha.hide();
-                } else {
-                    alert(resultado.erro || 'Erro ao enviar email');
+                    if (response.ok) {
+                        alert('Email de recuperação enviado com sucesso!');
+                        modalRecuperarSenha.hide();
+                    } else {
+                        alert(resultado.erro || 'Erro ao enviar email');
+                    }
+                } catch (erro) {
+                    console.error('Erro:', erro);
+                    alert('Erro ao processar solicitação');
                 }
-            } catch (erro) {
-                console.error('Erro:', erro);
-                alert('Erro ao processar solicitação');
-            }
+            });
         });
-    });
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>

@@ -50,7 +50,7 @@ def create_app(config_name=None):
     Talisman(app, content_security_policy=None)
     
     # Configura login
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = 'rotas.login'
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     
     # Cria diretórios necessários
@@ -63,6 +63,16 @@ def create_app(config_name=None):
     def load_user(user_id):
         """Carrega usuário pelo ID."""
         return Usuario.query.get(int(user_id))
+    
+    # Adiciona contexto global para templates
+    from datetime import datetime
+    @app.context_processor
+    def utility_processor():
+        return {
+            'datetime': datetime,
+            'str': str,
+            'len': len
+        }
     
     # Registra blueprints
     from .routes import rotas
