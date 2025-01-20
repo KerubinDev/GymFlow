@@ -9,7 +9,7 @@ from flask import (
 )
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from .models import db, Usuario, Aluno, Professor, Plano, Treino, Turma, Pagamento
+from .models import db, Usuario, Aluno, Professor, Plano, Treino, Turma, Pagamento, Exercicio, MatriculaTurma
 
 rotas = Blueprint('rotas', __name__)
 
@@ -548,3 +548,513 @@ def obter_aluno(aluno_id):
     """API para obter detalhes de um aluno específico."""
     aluno = Aluno.query.get_or_404(aluno_id)
     return jsonify(aluno.to_dict())
+
+
+@rotas.route('/api/pagamentos', methods=['GET'])
+@login_required
+def listar_pagamentos():
+    """API para listar pagamentos."""
+    pagamentos = Pagamento.query.all()
+    return jsonify([pagamento.to_dict() for pagamento in pagamentos])
+
+
+@rotas.route('/api/pagamentos', methods=['POST'])
+@login_required
+def criar_pagamento():
+    """API para criar um novo pagamento."""
+    dados = request.get_json()
+    
+    try:
+        pagamento = Pagamento(
+            aluno_id=dados['aluno_id'],
+            valor=float(dados['valor']),
+            data_pagamento=datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date(),
+            forma_pagamento=dados['forma_pagamento'],
+            status=dados['status'],
+            observacoes=dados.get('observacoes'),
+            data_vencimento=datetime.strptime(dados['data_vencimento'], '%Y-%m-%d').date() if dados.get('data_vencimento') else None
+        )
+        
+        db.session.add(pagamento)
+        db.session.commit()
+        
+        return jsonify(pagamento.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['PUT'])
+@login_required
+def atualizar_pagamento(pagamento_id):
+    """API para atualizar um pagamento existente."""
+    pagamento = Pagamento.query.get_or_404(pagamento_id)
+    dados = request.get_json()
+    
+    try:
+        if 'aluno_id' in dados:
+            pagamento.aluno_id = dados['aluno_id']
+        if 'valor' in dados:
+            pagamento.valor = float(dados['valor'])
+        if 'data_pagamento' in dados:
+            pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date()
+        if 'forma_pagamento' in dados:
+            pagamento.forma_pagamento = dados['forma_pagamento']
+        if 'status' in dados:
+            pagamento.status = dados['status']
+        if 'observacoes' in dados:
+            pagamento.observacoes = dados['observacoes']
+        if 'data_vencimento' in dados:
+            pagamento.data_vencimento = datetime.strptime(dados['data_vencimento'], '%Y-%m-%d').date() if dados['data_vencimento'] else None
+        
+        db.session.commit()
+        return jsonify(pagamento.to_dict())
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['DELETE'])
+@login_required
+def deletar_pagamento(pagamento_id):
+    """API para deletar um pagamento."""
+    pagamento = Pagamento.query.get_or_404(pagamento_id)
+    
+    try:
+        db.session.delete(pagamento)
+        db.session.commit()
+        return '', 204
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['GET'])
+@login_required
+def obter_pagamento(pagamento_id):
+    """API para obter detalhes de um pagamento específico."""
+    pagamento = Pagamento.query.get_or_404(pagamento_id)
+    return jsonify(pagamento.to_dict())
+
+
+@rotas.route('/api/pagamentos/resumo', methods=['GET'])
+@login_required
+def obter_resumo_pagamentos():
+    """API para obter resumo financeiro dos pagamentos."""
+    hoje = datetime.now().date()
+    primeiro_dia_mes = hoje.replace(day=1)
+    ultimo_dia_mes = (hoje.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    
+    # Total recebido no mês
+    total_recebido = db.session.query(db.func.sum(Pagamento.valor))\
+        .filter(Pagamento.status == 'pago')\
+        .filter(Pagamento.data_pagamento.between(primeiro_dia_mes, ultimo_dia_mes))\
+        .scalar() or 0
+    
+    # Total pendente
+    total_pendente = db.session.query(db.func.sum(Pagamento.valor))\
+        .filter(Pagamento.status == 'pendente')\
+        .scalar() or 0
+    
+    # Total vencido
+    total_vencido = db.session.query(db.func.sum(Pagamento.valor))\
+        .filter(Pagamento.status == 'pendente')\
+        .filter(Pagamento.data_vencimento < hoje)\
+        .scalar() or 0
+    
+    # Taxa de inadimplência
+    total_pagamentos = db.session.query(db.func.count(Pagamento.id)).scalar() or 1
+    total_vencidos = db.session.query(db.func.count(Pagamento.id))\
+        .filter(Pagamento.status == 'pendente')\
+        .filter(Pagamento.data_vencimento < hoje)\
+        .scalar() or 0
+    
+    taxa_inadimplencia = (total_vencidos / total_pagamentos) * 100
+    
+    return jsonify({
+        'total_recebido': float(total_recebido),
+        'total_pendente': float(total_pendente),
+        'total_vencido': float(total_vencido),
+        'taxa_inadimplencia': float(taxa_inadimplencia)
+    })
+
+
+@rotas.route('/api/treinos', methods=['GET'])
+@login_required
+def listar_treinos():
+    """API para listar treinos."""
+    treinos = Treino.query.all()
+    return jsonify([treino.to_dict() for treino in treinos])
+
+
+@rotas.route('/api/treinos', methods=['POST'])
+@login_required
+def criar_treino():
+    """API para criar um novo treino."""
+    dados = request.get_json()
+    
+    try:
+        treino = Treino(
+            aluno_id=dados['aluno_id'],
+            professor_id=dados['professor_id'],
+            tipo=dados['tipo'],
+            data_inicio=datetime.strptime(dados['data_inicio'], '%Y-%m-%d').date(),
+            status=dados['status'],
+            observacoes=dados.get('observacoes'),
+            exercicios=dados.get('exercicios', [])
+        )
+        
+        db.session.add(treino)
+        db.session.commit()
+        
+        return jsonify(treino.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/treinos/<int:treino_id>', methods=['PUT'])
+@login_required
+def atualizar_treino(treino_id):
+    """API para atualizar um treino existente."""
+    treino = Treino.query.get_or_404(treino_id)
+    dados = request.get_json()
+    
+    try:
+        if 'aluno_id' in dados:
+            treino.aluno_id = dados['aluno_id']
+        if 'professor_id' in dados:
+            treino.professor_id = dados['professor_id']
+        if 'tipo' in dados:
+            treino.tipo = dados['tipo']
+        if 'data_inicio' in dados:
+            treino.data_inicio = datetime.strptime(dados['data_inicio'], '%Y-%m-%d').date()
+        if 'status' in dados:
+            treino.status = dados['status']
+        if 'observacoes' in dados:
+            treino.observacoes = dados['observacoes']
+        if 'exercicios' in dados:
+            treino.exercicios = dados['exercicios']
+        
+        db.session.commit()
+        return jsonify(treino.to_dict())
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/treinos/<int:treino_id>', methods=['DELETE'])
+@login_required
+def deletar_treino(treino_id):
+    """API para deletar um treino."""
+    treino = Treino.query.get_or_404(treino_id)
+    
+    try:
+        db.session.delete(treino)
+        db.session.commit()
+        return '', 204
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/treinos/<int:treino_id>', methods=['GET'])
+@login_required
+def obter_treino(treino_id):
+    """API para obter detalhes de um treino específico."""
+    treino = Treino.query.get_or_404(treino_id)
+    return jsonify(treino.to_dict())
+
+
+@rotas.route('/api/exercicios', methods=['GET'])
+@login_required
+def listar_exercicios():
+    """API para listar exercícios."""
+    exercicios = Exercicio.query.all()
+    return jsonify([exercicio.to_dict() for exercicio in exercicios])
+
+
+@rotas.route('/api/exercicios', methods=['POST'])
+@login_required
+def criar_exercicio():
+    """API para criar um novo exercício."""
+    dados = request.get_json()
+    
+    try:
+        exercicio = Exercicio(
+            nome=dados['nome'],
+            descricao=dados.get('descricao'),
+            grupo_muscular=dados['grupo_muscular'],
+            equipamento=dados.get('equipamento'),
+            nivel=dados.get('nivel', 'iniciante')
+        )
+        
+        db.session.add(exercicio)
+        db.session.commit()
+        
+        return jsonify(exercicio.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/professores', methods=['GET'])
+@login_required
+def listar_professores():
+    """Lista todos os professores ativos."""
+    professores = Professor.query.filter_by(ativo=True).all()
+    return jsonify([{
+        'id': professor.id,
+        'nome': professor.nome,
+        'email': professor.email,
+        'telefone': professor.telefone,
+        'especialidades': professor.especialidades
+    } for professor in professores])
+
+
+@rotas.route('/api/turmas', methods=['GET'])
+@login_required
+def listar_turmas():
+    """Lista todas as turmas cadastradas."""
+    turmas = Turma.query.all()
+    return jsonify([{
+        'id': turma.id,
+        'modalidade': turma.modalidade,
+        'professor_id': turma.professor_id,
+        'professor': {
+            'id': turma.professor.id,
+            'nome': turma.professor.nome
+        },
+        'dia_semana': turma.dia_semana,
+        'horario_inicio': turma.horario_inicio,
+        'horario_fim': turma.horario_fim,
+        'capacidade_maxima': turma.capacidade_maxima,
+        'nivel': turma.nivel,
+        'descricao': turma.descricao,
+        'matriculas': [{
+            'id': matricula.id,
+            'aluno': {
+                'id': matricula.aluno.id,
+                'nome': matricula.aluno.nome
+            }
+        } for matricula in turma.matriculas]
+    } for turma in turmas])
+
+
+@rotas.route('/api/turmas/<int:turma_id>', methods=['GET'])
+@login_required
+def obter_turma(turma_id):
+    """Obtém os detalhes de uma turma específica."""
+    turma = Turma.query.get_or_404(turma_id)
+    return jsonify({
+        'id': turma.id,
+        'modalidade': turma.modalidade,
+        'professor_id': turma.professor_id,
+        'professor': {
+            'id': turma.professor.id,
+            'nome': turma.professor.nome
+        },
+        'dia_semana': turma.dia_semana,
+        'horario_inicio': turma.horario_inicio,
+        'horario_fim': turma.horario_fim,
+        'capacidade_maxima': turma.capacidade_maxima,
+        'nivel': turma.nivel,
+        'descricao': turma.descricao,
+        'matriculas': [{
+            'id': matricula.id,
+            'aluno': {
+                'id': matricula.aluno.id,
+                'nome': matricula.aluno.nome
+            }
+        } for matricula in turma.matriculas]
+    })
+
+
+@rotas.route('/api/turmas', methods=['POST'])
+@login_required
+@gerente_required
+def criar_turma():
+    """Cria uma nova turma."""
+    dados = request.get_json()
+    
+    # Validação dos dados
+    campos_obrigatorios = [
+        'modalidade', 'professor_id', 'dia_semana', 
+        'horario_inicio', 'horario_fim', 'capacidade_maxima', 'nivel'
+    ]
+    for campo in campos_obrigatorios:
+        if campo not in dados:
+            return jsonify({'erro': f'Campo {campo} é obrigatório'}), 400
+    
+    # Verifica se o professor existe
+    professor = Professor.query.get(dados['professor_id'])
+    if not professor:
+        return jsonify({'erro': 'Professor não encontrado'}), 404
+    
+    # Verifica se já existe turma no mesmo horário
+    turma_existente = Turma.query.filter_by(
+        dia_semana=dados['dia_semana'],
+        horario_inicio=dados['horario_inicio']
+    ).first()
+    if turma_existente:
+        return jsonify({'erro': 'Já existe uma turma neste horário'}), 400
+    
+    # Cria a nova turma
+    turma = Turma(
+        modalidade=dados['modalidade'],
+        professor_id=dados['professor_id'],
+        dia_semana=dados['dia_semana'],
+        horario_inicio=dados['horario_inicio'],
+        horario_fim=dados['horario_fim'],
+        capacidade_maxima=dados['capacidade_maxima'],
+        nivel=dados['nivel'],
+        descricao=dados.get('descricao', '')
+    )
+    
+    db.session.add(turma)
+    db.session.commit()
+    
+    return jsonify({
+        'mensagem': 'Turma criada com sucesso',
+        'id': turma.id
+    }), 201
+
+
+@rotas.route('/api/turmas/<int:turma_id>', methods=['PUT'])
+@login_required
+@gerente_required
+def atualizar_turma(turma_id):
+    """Atualiza uma turma existente."""
+    turma = Turma.query.get_or_404(turma_id)
+    dados = request.get_json()
+    
+    # Validação dos dados
+    campos_obrigatorios = [
+        'modalidade', 'professor_id', 'dia_semana', 
+        'horario_inicio', 'horario_fim', 'capacidade_maxima', 'nivel'
+    ]
+    for campo in campos_obrigatorios:
+        if campo not in dados:
+            return jsonify({'erro': f'Campo {campo} é obrigatório'}), 400
+    
+    # Verifica se o professor existe
+    professor = Professor.query.get(dados['professor_id'])
+    if not professor:
+        return jsonify({'erro': 'Professor não encontrado'}), 404
+    
+    # Verifica se já existe outra turma no mesmo horário
+    turma_existente = Turma.query.filter(
+        Turma.id != turma_id,
+        Turma.dia_semana == dados['dia_semana'],
+        Turma.horario_inicio == dados['horario_inicio']
+    ).first()
+    if turma_existente:
+        return jsonify({'erro': 'Já existe uma turma neste horário'}), 400
+    
+    # Atualiza a turma
+    turma.modalidade = dados['modalidade']
+    turma.professor_id = dados['professor_id']
+    turma.dia_semana = dados['dia_semana']
+    turma.horario_inicio = dados['horario_inicio']
+    turma.horario_fim = dados['horario_fim']
+    turma.capacidade_maxima = dados['capacidade_maxima']
+    turma.nivel = dados['nivel']
+    turma.descricao = dados.get('descricao', '')
+    
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Turma atualizada com sucesso'})
+
+
+@rotas.route('/api/turmas/<int:turma_id>', methods=['DELETE'])
+@login_required
+@gerente_required
+def deletar_turma(turma_id):
+    """Deleta uma turma existente."""
+    turma = Turma.query.get_or_404(turma_id)
+    
+    # Verifica se há alunos matriculados
+    if turma.matriculas:
+        return jsonify({
+            'erro': 'Não é possível excluir uma turma com alunos matriculados'
+        }), 400
+    
+    db.session.delete(turma)
+    db.session.commit()
+    
+    return jsonify({'mensagem': 'Turma excluída com sucesso'})
+
+
+@rotas.route('/api/turmas/<int:turma_id>/matriculas', methods=['GET'])
+@login_required
+def listar_matriculas_turma(turma_id):
+    """API para listar matrículas de uma turma."""
+    turma = Turma.query.get_or_404(turma_id)
+    return jsonify([matricula.to_dict() for matricula in turma.matriculas])
+
+
+@rotas.route('/api/turmas/<int:turma_id>/matriculas', methods=['POST'])
+@login_required
+def matricular_aluno(turma_id):
+    """API para matricular um aluno em uma turma."""
+    turma = Turma.query.get_or_404(turma_id)
+    dados = request.get_json()
+    
+    try:
+        # Verifica se há vagas
+        if len(turma.matriculas) >= turma.capacidade_maxima:
+            return jsonify({'erro': 'Turma lotada'}), 400
+        
+        # Verifica se o aluno já está matriculado
+        matricula_existente = MatriculaTurma.query.filter_by(
+            aluno_id=dados['aluno_id'],
+            turma_id=turma_id,
+            status='ativo'
+        ).first()
+        
+        if matricula_existente:
+            return jsonify({'erro': 'Aluno já matriculado nesta turma'}), 400
+        
+        matricula = MatriculaTurma(
+            aluno_id=dados['aluno_id'],
+            turma_id=turma_id,
+            data_inicio=datetime.now().date(),
+            status='ativo'
+        )
+        
+        db.session.add(matricula)
+        db.session.commit()
+        
+        return jsonify(matricula.to_dict()), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/turmas/<int:turma_id>/matriculas/<int:matricula_id>', methods=['DELETE'])
+@login_required
+def cancelar_matricula(turma_id, matricula_id):
+    """API para cancelar a matrícula de um aluno em uma turma."""
+    matricula = MatriculaTurma.query.get_or_404(matricula_id)
+    
+    if matricula.turma_id != turma_id:
+        return jsonify({'erro': 'Matrícula não pertence a esta turma'}), 400
+    
+    try:
+        matricula.status = 'cancelado'
+        matricula.data_fim = datetime.now().date()
+        
+        db.session.commit()
+        return jsonify(matricula.to_dict())
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400

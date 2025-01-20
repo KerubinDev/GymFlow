@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Horários e Turmas - GymFlow{% endblock %}
+{% block title %}Horários das Turmas - GymFlow{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -54,112 +54,122 @@
     
     .horario-grid {
         display: grid;
-        grid-template-columns: 100px repeat(7, 1fr);
-        gap: 5px;
-        margin-bottom: 20px;
+        grid-template-columns: 80px repeat(7, 1fr);
+        gap: 2px;
+        background-color: var(--bs-gray-200);
+        padding: 2px;
+        border-radius: 4px;
     }
     
-    .horario-header {
-        background-color: #0d6efd;
-        color: white;
-        padding: 10px;
+    .horario-header, .dia-header {
+        background-color: var(--bs-gray-800);
+        color: var(--bs-light);
+        padding: 8px;
         text-align: center;
-        border-radius: 5px;
         font-weight: bold;
+        border-radius: 2px;
     }
     
     .horario-cell {
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
+        background-color: var(--bs-light);
+        padding: 8px;
         min-height: 80px;
+        border-radius: 2px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     
     .horario-cell:hover {
-        background-color: #e9ecef;
+        background-color: var(--bs-gray-100);
         transform: scale(1.02);
     }
     
     .horario-cell.ocupado {
-        background-color: #cfe2ff;
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
     }
     
     .horario-cell.lotado {
-        background-color: #f8d7da;
+        background-color: rgba(var(--bs-danger-rgb), 0.1);
     }
     
     .progress-ocupacao {
-        height: 5px;
-        margin-top: 5px;
+        height: 4px;
+        margin-top: 8px;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Horários e Turmas</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaTurma">
-            <i class="bi bi-plus-lg"></i> Nova Turma
-        </button>
-    </div>
-    
-    <!-- Filtros -->
-    <div class="filtro-container">
-        <div class="row">
-            <div class="col-md-3">
-                <label for="filtroModalidade" class="form-label">Modalidade</label>
-                <select class="form-select" id="filtroModalidade">
-                    <option value="">Todas</option>
-                    <option value="musculacao">Musculação</option>
-                    <option value="crossfit">CrossFit</option>
-                    <option value="pilates">Pilates</option>
-                    <option value="yoga">Yoga</option>
-                    <option value="funcional">Funcional</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroProfessor" class="form-label">Professor</label>
-                <select class="form-select" id="filtroProfessor">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroPeriodo" class="form-label">Período</label>
-                <select class="form-select" id="filtroPeriodo">
-                    <option value="">Todos</option>
-                    <option value="manha">Manhã</option>
-                    <option value="tarde">Tarde</option>
-                    <option value="noite">Noite</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroStatus" class="form-label">Status</label>
-                <select class="form-select" id="filtroStatus">
-                    <option value="">Todos</option>
-                    <option value="disponivel">Disponível</option>
-                    <option value="lotado">Lotado</option>
-                </select>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Filtros</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="filtroModalidade" class="form-label">Modalidade</label>
+                            <select id="filtroModalidade" class="form-select">
+                                <option value="">Todas</option>
+                                <option value="musculacao">Musculação</option>
+                                <option value="pilates">Pilates</option>
+                                <option value="yoga">Yoga</option>
+                                <option value="crossfit">CrossFit</option>
+                                <option value="funcional">Funcional</option>
+                                <option value="danca">Dança</option>
+                                <option value="spinning">Spinning</option>
+                                <option value="natacao">Natação</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroProfessor" class="form-label">Professor</label>
+                            <select id="filtroProfessor" class="form-select">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroPeriodo" class="form-label">Período</label>
+                            <select id="filtroPeriodo" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="manha">Manhã (06:00 - 12:00)</option>
+                                <option value="tarde">Tarde (12:00 - 18:00)</option>
+                                <option value="noite">Noite (18:00 - 22:00)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroStatus" class="form-label">Status</label>
+                            <select id="filtroStatus" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="disponiveis">Com vagas</option>
+                                <option value="lotadas">Lotadas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Grade de Horários -->
-    <div class="card">
-        <div class="card-body">
-            <div class="horario-grid">
-                <div class="horario-header">Horário</div>
-                <div class="horario-header">Segunda</div>
-                <div class="horario-header">Terça</div>
-                <div class="horario-header">Quarta</div>
-                <div class="horario-header">Quinta</div>
-                <div class="horario-header">Sexta</div>
-                <div class="horario-header">Sábado</div>
-                <div class="horario-header">Domingo</div>
-                
-                <!-- Horários serão preenchidos via JavaScript -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Grade de Horários</h5>
+                    <div class="horario-grid">
+                        <div class="horario-header"></div>
+                        <div class="dia-header">Segunda</div>
+                        <div class="dia-header">Terça</div>
+                        <div class="dia-header">Quarta</div>
+                        <div class="dia-header">Quinta</div>
+                        <div class="dia-header">Sexta</div>
+                        <div class="dia-header">Sábado</div>
+                        <div class="dia-header">Domingo</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -167,7 +177,7 @@
 
 <!-- Modal Nova/Editar Turma -->
 <div class="modal fade" id="modalNovaTurma" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Nova Turma</h5>
@@ -177,82 +187,77 @@
                 <form id="formTurma">
                     <input type="hidden" id="turmaId">
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="modalidade" class="form-label">Modalidade</label>
-                            <select class="form-select" id="modalidade" required>
-                                <option value="musculacao">Musculação</option>
-                                <option value="crossfit">CrossFit</option>
-                                <option value="pilates">Pilates</option>
-                                <option value="yoga">Yoga</option>
-                                <option value="funcional">Funcional</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="professor" class="form-label">Professor</label>
-                            <select class="form-select" id="professor" required>
-                                <option value="">Selecione um professor</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="modalidade" class="form-label">Modalidade</label>
+                        <select id="modalidade" class="form-select" required>
+                            <option value="">Selecione uma modalidade</option>
+                            <option value="musculacao">Musculação</option>
+                            <option value="pilates">Pilates</option>
+                            <option value="yoga">Yoga</option>
+                            <option value="crossfit">CrossFit</option>
+                            <option value="funcional">Funcional</option>
+                            <option value="danca">Dança</option>
+                            <option value="spinning">Spinning</option>
+                            <option value="natacao">Natação</option>
+                        </select>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+                    <div class="mb-3">
+                        <label for="professor" class="form-label">Professor</label>
+                        <select id="professor" class="form-select" required>
+                            <option value="">Selecione um professor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col">
                             <label for="diaSemana" class="form-label">Dia da Semana</label>
-                            <select class="form-select" id="diaSemana" required>
-                                <option value="1">Segunda-feira</option>
-                                <option value="2">Terça-feira</option>
-                                <option value="3">Quarta-feira</option>
-                                <option value="4">Quinta-feira</option>
-                                <option value="5">Sexta-feira</option>
+                            <select id="diaSemana" class="form-select" required>
+                                <option value="1">Segunda</option>
+                                <option value="2">Terça</option>
+                                <option value="3">Quarta</option>
+                                <option value="4">Quinta</option>
+                                <option value="5">Sexta</option>
                                 <option value="6">Sábado</option>
-                                <option value="0">Domingo</option>
+                                <option value="7">Domingo</option>
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col">
                             <label for="horarioInicio" class="form-label">Horário Início</label>
-                            <input type="time" class="form-control" id="horarioInicio" required>
+                            <input type="time" id="horarioInicio" class="form-control" required>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col">
                             <label for="horarioFim" class="form-label">Horário Fim</label>
-                            <input type="time" class="form-control" id="horarioFim" required>
+                            <input type="time" id="horarioFim" class="form-control" required>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="capacidadeMaxima" class="form-label">
-                                Capacidade Máxima
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="capacidadeMaxima" 
-                                   min="1" 
-                                   required>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="capacidadeMaxima" class="form-label">Capacidade Máxima</label>
+                            <input type="number" id="capacidadeMaxima" class="form-control" required min="1">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col">
                             <label for="nivel" class="form-label">Nível</label>
-                            <select class="form-select" id="nivel" required>
+                            <select id="nivel" class="form-select" required>
                                 <option value="iniciante">Iniciante</option>
                                 <option value="intermediario">Intermediário</option>
                                 <option value="avancado">Avançado</option>
+                                <option value="todos">Todos os níveis</option>
                             </select>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="descricao" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="descricao" rows="3"></textarea>
+                        <textarea id="descricao" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnSalvarTurma">
-                    Salvar
-                </button>
             </div>
         </div>
     </div>
@@ -278,230 +283,132 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalNovaTurma = new bootstrap.Modal(
-            document.getElementById('modalNovaTurma')
-        );
-        const modalDetalhesTurma = new bootstrap.Modal(
-            document.getElementById('modalDetalhesTurma')
-        );
-        
-        // Carregar professores
-        async function carregarProfessores() {
-            try {
-                const response = await fetch('/professores');
-                const professores = await response.json();
-                
-                const selectProfessor = document.getElementById('professor');
-                const filtroProfessor = document.getElementById('filtroProfessor');
-                
+    // Carregar professores
+    async function carregarProfessores() {
+        try {
+            const response = await fetch('/api/professores');
+            if (!response.ok) throw new Error('Erro ao carregar professores');
+            
+            const professores = await response.json();
+            const selectProfessor = document.getElementById('filtroProfessor');
+            const selectProfessorModal = document.getElementById('professor');
+            
+            [selectProfessor, selectProfessorModal].forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">Selecione um professor</option>';
                 professores.forEach(professor => {
-                    const option = document.createElement('option');
-                    option.value = professor.id;
-                    option.textContent = professor.nome;
-                    selectProfessor.appendChild(option.cloneNode(true));
-                    filtroProfessor.appendChild(option);
+                    select.innerHTML += `
+                        <option value="${professor.id}">${professor.nome}</option>
+                    `;
                 });
-            } catch (erro) {
-                console.error('Erro ao carregar professores:', erro);
-            }
+            });
+        } catch (erro) {
+            console.error('Erro ao carregar professores:', erro);
+            alert('Erro ao carregar professores');
         }
-        
-        // Gerar grade de horários
-        function gerarGradeHorarios() {
+    }
+
+    // Carregar turmas
+    async function carregarTurmas() {
+        try {
+            const response = await fetch('/api/turmas');
+            if (!response.ok) throw new Error('Erro ao carregar turmas');
+            
+            const turmas = await response.json();
+            const horarioGrid = document.querySelector('.horario-grid');
+            
+            // Limpa os horários existentes
+            const cells = horarioGrid.querySelectorAll('.horario-cell');
+            cells.forEach(cell => cell.remove());
+            
+            // Cria a grade de horários
             const horarios = [
                 '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
                 '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
                 '18:00', '19:00', '20:00', '21:00', '22:00'
             ];
             
-            const grid = document.querySelector('.horario-grid');
-            
             horarios.forEach(horario => {
+                // Adiciona o horário
                 const horarioCell = document.createElement('div');
                 horarioCell.className = 'horario-header';
                 horarioCell.textContent = horario;
-                grid.appendChild(horarioCell);
+                horarioGrid.appendChild(horarioCell);
                 
-                // Células para cada dia da semana
-                for (let i = 0; i < 7; i++) {
+                // Adiciona as células para cada dia da semana
+                for (let dia = 1; dia <= 7; dia++) {
                     const cell = document.createElement('div');
                     cell.className = 'horario-cell';
                     cell.dataset.horario = horario;
-                    cell.dataset.dia = i;
-                    cell.addEventListener('click', () => mostrarDetalhesTurma(horario, i));
-                    grid.appendChild(cell);
-                }
-            });
-        }
-        
-        // Carregar turmas
-        async function carregarTurmas() {
-            try {
-                const filtros = {
-                    modalidade: document.getElementById('filtroModalidade').value,
-                    professor: document.getElementById('filtroProfessor').value,
-                    periodo: document.getElementById('filtroPeriodo').value,
-                    status: document.getElementById('filtroStatus').value
-                };
-                
-                const queryString = new URLSearchParams(filtros).toString();
-                const response = await fetch(`/turmas?${queryString}`);
-                const turmas = await response.json();
-                
-                // Limpar células
-                document.querySelectorAll('.horario-cell').forEach(cell => {
-                    cell.innerHTML = '';
-                    cell.className = 'horario-cell';
-                });
-                
-                // Preencher turmas
-                turmas.forEach(turma => {
-                    const cell = document.querySelector(
-                        `.horario-cell[data-horario="${turma.horario_inicio}"]` +
-                        `[data-dia="${turma.dia_semana}"]`
+                    cell.dataset.dia = dia;
+                    
+                    // Encontra as turmas para este horário e dia
+                    const turmasDia = turmas.filter(turma => 
+                        turma.dia_semana === dia && 
+                        turma.horario_inicio === horario
                     );
                     
-                    if (cell) {
-                        const ocupacao = (turma.alunos_matriculados / turma.capacidade_maxima) * 100;
-                        const status = ocupacao >= 100 ? 'lotado' : 'ocupado';
+                    if (turmasDia.length > 0) {
+                        const turma = turmasDia[0];
+                        const ocupacao = (turma.matriculas.length / turma.capacidade_maxima) * 100;
                         
-                        cell.className = `horario-cell ${status}`;
+                        cell.classList.add(ocupacao >= 100 ? 'lotado' : 'ocupado');
                         cell.innerHTML = `
-                            <div class="small">
-                                <strong>${turma.modalidade}</strong><br>
-                                ${turma.professor.nome}<br>
-                                ${turma.alunos_matriculados}/${turma.capacidade_maxima} alunos
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${turma.modalidade}</strong>
+                                    <br>
+                                    <small>${turma.professor.nome}</small>
+                                </div>
+                                <div>
+                                    <span class="badge ${ocupacao >= 100 ? 'bg-danger' : 'bg-primary'}">
+                                        ${turma.matriculas.length}/${turma.capacidade_maxima}
+                                    </span>
+                                </div>
                             </div>
                             <div class="progress progress-ocupacao">
-                                <div class="progress-bar" 
+                                <div class="progress-bar ${ocupacao >= 100 ? 'bg-danger' : 'bg-primary'}" 
                                      role="progressbar" 
                                      style="width: ${ocupacao}%">
                                 </div>
                             </div>
                         `;
-                        cell.dataset.turmaId = turma.id;
+                        
+                        cell.onclick = () => editarTurma(turma.id);
+                    } else {
+                        cell.onclick = () => criarTurma(dia, horario);
                     }
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar turmas:', erro);
-            }
-        }
-        
-        // Mostrar detalhes da turma
-        async function mostrarDetalhesTurma(horario, dia) {
-            const cell = document.querySelector(
-                `.horario-cell[data-horario="${horario}"][data-dia="${dia}"]`
-            );
-            
-            if (!cell.dataset.turmaId) {
-                document.getElementById('turmaId').value = '';
-                document.getElementById('horarioInicio').value = horario;
-                document.getElementById('diaSemana').value = dia;
-                
-                document.querySelector('#modalNovaTurma .modal-title').textContent = 
-                    'Nova Turma';
-                modalNovaTurma.show();
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/turmas/${cell.dataset.turmaId}`);
-                const turma = await response.json();
-                
-                const detalhesTurma = document.getElementById('detalhesTurma');
-                detalhesTurma.innerHTML = `
-                    <h6>Modalidade: ${turma.modalidade}</h6>
-                    <p>Professor: ${turma.professor.nome}</p>
-                    <p>Horário: ${turma.horario_inicio} - ${turma.horario_fim}</p>
-                    <p>Capacidade: ${turma.alunos_matriculados}/${turma.capacidade_maxima}</p>
-                    <p>Nível: ${turma.nivel}</p>
-                    <p>Descrição: ${turma.descricao || 'Sem descrição'}</p>
                     
-                    <h6 class="mt-4">Alunos Matriculados:</h6>
-                    <ul class="list-unstyled">
-                        ${turma.alunos.map(aluno => `
-                            <li>${aluno.nome}</li>
-                        `).join('')}
-                    </ul>
-                    
-                    <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-primary me-2"
-                                onclick="editarTurma(${turma.id})">
-                            <i class="bi bi-pencil"></i> Editar
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger"
-                                onclick="excluirTurma(${turma.id})">
-                            <i class="bi bi-trash"></i> Excluir
-                        </button>
-                    </div>
-                `;
-                
-                modalDetalhesTurma.show();
-            } catch (erro) {
-                console.error('Erro ao carregar detalhes da turma:', erro);
-            }
-        }
-        
-        // Salvar turma
-        async function salvarTurma() {
-            const dados = {
-                modalidade: document.getElementById('modalidade').value,
-                professor_id: document.getElementById('professor').value,
-                dia_semana: document.getElementById('diaSemana').value,
-                horario_inicio: document.getElementById('horarioInicio').value,
-                horario_fim: document.getElementById('horarioFim').value,
-                capacidade_maxima: document.getElementById('capacidadeMaxima').value,
-                nivel: document.getElementById('nivel').value,
-                descricao: document.getElementById('descricao').value
-            };
-            
-            const turmaId = document.getElementById('turmaId').value;
-            const method = turmaId ? 'PUT' : 'POST';
-            const url = turmaId ? `/turmas/${turmaId}` : '/turmas';
-            
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
-                
-                if (response.ok) {
-                    alert('Turma salva com sucesso!');
-                    modalNovaTurma.hide();
-                    carregarTurmas();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao salvar turma');
+                    horarioGrid.appendChild(cell);
                 }
-            } catch (erro) {
-                console.error('Erro ao salvar turma:', erro);
-                alert('Erro ao salvar turma');
-            }
-        }
-        
-        // Event Listeners
-        document.getElementById('btnSalvarTurma').addEventListener('click', salvarTurma);
-        
-        // Filtros
-        ['filtroModalidade', 'filtroProfessor', 'filtroPeriodo', 'filtroStatus']
-            .forEach(id => {
-                document.getElementById(id).addEventListener('change', carregarTurmas);
             });
+        } catch (erro) {
+            console.error('Erro ao carregar turmas:', erro);
+            alert('Erro ao carregar turmas');
+        }
+    }
+
+    // Criar turma
+    function criarTurma(dia, horario) {
+        document.getElementById('turmaId').value = '';
+        document.getElementById('diaSemana').value = dia;
+        document.getElementById('horarioInicio').value = horario;
         
-        // Inicialização
-        carregarProfessores();
-        gerarGradeHorarios();
-        carregarTurmas();
-    });
-    
-    // Funções globais
+        // Calcula o horário de fim (1 hora depois)
+        const [hora] = horario.split(':');
+        const horaFim = String(parseInt(hora) + 1).padStart(2, '0');
+        document.getElementById('horarioFim').value = `${horaFim}:00`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('modalNovaTurma'));
+        modal.show();
+    }
+
+    // Editar turma
     async function editarTurma(id) {
         try {
-            const response = await fetch(`/turmas/${id}`);
+            const response = await fetch(`/api/turmas/${id}`);
+            if (!response.ok) throw new Error('Erro ao carregar turma');
+            
             const turma = await response.json();
             
             document.getElementById('turmaId').value = turma.id;
@@ -512,40 +419,90 @@
             document.getElementById('horarioFim').value = turma.horario_fim;
             document.getElementById('capacidadeMaxima').value = turma.capacidade_maxima;
             document.getElementById('nivel').value = turma.nivel;
-            document.getElementById('descricao').value = turma.descricao;
+            document.getElementById('descricao').value = turma.descricao || '';
             
-            document.querySelector('#modalNovaTurma .modal-title').textContent = 
-                'Editar Turma';
-            new bootstrap.Modal(document.getElementById('modalNovaTurma')).show();
-            bootstrap.Modal.getInstance(document.getElementById('modalDetalhesTurma')).hide();
+            const modal = new bootstrap.Modal(document.getElementById('modalNovaTurma'));
+            modal.show();
+            
         } catch (erro) {
             console.error('Erro ao carregar turma:', erro);
-            alert('Erro ao carregar dados da turma');
+            alert('Erro ao carregar turma');
         }
     }
-    
-    async function excluirTurma(id) {
-        if (confirm('Tem certeza que deseja excluir esta turma?')) {
-            try {
-                const response = await fetch(`/turmas/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('Turma excluída com sucesso!');
-                    bootstrap.Modal.getInstance(
-                        document.getElementById('modalDetalhesTurma')
-                    ).hide();
-                    carregarTurmas();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao excluir turma');
-                }
-            } catch (erro) {
-                console.error('Erro ao excluir turma:', erro);
-                alert('Erro ao excluir turma');
+
+    // Salvar turma
+    async function salvarTurma(event) {
+        event.preventDefault();
+        
+        const turmaId = document.getElementById('turmaId').value;
+        const dados = {
+            modalidade: document.getElementById('modalidade').value,
+            professor_id: document.getElementById('professor').value,
+            dia_semana: document.getElementById('diaSemana').value,
+            horario_inicio: document.getElementById('horarioInicio').value,
+            horario_fim: document.getElementById('horarioFim').value,
+            capacidade_maxima: document.getElementById('capacidadeMaxima').value,
+            nivel: document.getElementById('nivel').value,
+            descricao: document.getElementById('descricao').value
+        };
+
+        try {
+            const url = turmaId ? `/api/turmas/${turmaId}` : '/api/turmas';
+            const method = turmaId ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            });
+
+            if (!response.ok) {
+                const erro = await response.json();
+                throw new Error(erro.erro || 'Erro ao salvar turma');
             }
+
+            alert('Turma salva com sucesso!');
+            document.getElementById('formTurma').reset();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovaTurma'));
+            if (modal) modal.hide();
+
+            carregarTurmas();
+        } catch (erro) {
+            console.error('Erro ao salvar turma:', erro);
+            alert(erro.message);
         }
     }
+
+    // Aplicar filtros
+    function aplicarFiltros() {
+        const filtros = {
+            modalidade: document.getElementById('filtroModalidade').value,
+            professor: document.getElementById('filtroProfessor').value,
+            periodo: document.getElementById('filtroPeriodo').value,
+            status: document.getElementById('filtroStatus').value
+        };
+        
+        carregarTurmas(filtros);
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configura o formulário
+        document.getElementById('formTurma').addEventListener('submit', salvarTurma);
+        
+        // Configura os filtros
+        ['filtroModalidade', 'filtroProfessor', 'filtroPeriodo', 'filtroStatus'].forEach(id => {
+            document.getElementById(id).addEventListener('change', aplicarFiltros);
+        });
+        
+        // Carrega os dados iniciais
+        Promise.all([
+            carregarProfessores(),
+            carregarTurmas()
+        ]);
+    });
 </script>
 {% endblock %} 

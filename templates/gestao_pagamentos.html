@@ -231,86 +231,80 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- jQuery Mask Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalNovoPagamento = new bootstrap.Modal(
-            document.getElementById('modalNovoPagamento')
-        );
-        
-        // Formatar valores monetários
-        function formatarMoeda(valor) {
-            return valor.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
+    // Formatar valores monetários
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+    
+    // Carregar alunos
+    async function carregarAlunos() {
+        try {
+            const response = await fetch('/api/alunos');
+            if (!response.ok) throw new Error('Erro ao carregar alunos');
+            
+            const alunos = await response.json();
+            const selectAluno = document.getElementById('alunoPagamento');
+            selectAluno.innerHTML = '<option value="">Selecione um aluno</option>';
+            
+            alunos.forEach(aluno => {
+                selectAluno.innerHTML += `
+                    <option value="${aluno.id}">${aluno.nome} - ${aluno.cpf}</option>
+                `;
             });
+        } catch (erro) {
+            console.error('Erro ao carregar alunos:', erro);
+            alert('Erro ao carregar alunos');
         }
-        
-        // Carregar alunos
-        async function carregarAlunos() {
-            try {
-                const response = await fetch('/alunos');
-                const alunos = await response.json();
-                
-                const selectAluno = document.getElementById('alunoPagamento');
-                alunos.forEach(aluno => {
-                    const option = document.createElement('option');
-                    option.value = aluno.id;
-                    option.textContent = aluno.nome;
-                    selectAluno.appendChild(option);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar alunos:', erro);
-            }
+    }
+    
+    // Carregar resumo financeiro
+    async function carregarResumo() {
+        try {
+            const response = await fetch('/api/pagamentos/resumo');
+            if (!response.ok) throw new Error('Erro ao carregar resumo');
+            
+            const resumo = await response.json();
+            
+            document.getElementById('totalRecebido').textContent = formatarMoeda(resumo.total_recebido);
+            document.getElementById('totalPendente').textContent = formatarMoeda(resumo.total_pendente);
+            document.getElementById('totalVencido').textContent = formatarMoeda(resumo.total_vencido);
+            document.getElementById('taxaInadimplencia').textContent = 
+                resumo.taxa_inadimplencia.toFixed(1) + '%';
+            
+        } catch (erro) {
+            console.error('Erro ao carregar resumo:', erro);
+            alert('Erro ao carregar resumo financeiro');
         }
-        
-        // Carregar resumo financeiro
-        async function carregarResumo() {
-            try {
-                const response = await fetch('/pagamentos/resumo');
-                const resumo = await response.json();
-                
-                document.getElementById('totalRecebido').textContent = 
-                    formatarMoeda(resumo.total_recebido);
-                document.getElementById('totalPendente').textContent = 
-                    formatarMoeda(resumo.total_pendente);
-                document.getElementById('totalVencido').textContent = 
-                    formatarMoeda(resumo.total_vencido);
-                document.getElementById('taxaInadimplencia').textContent = 
-                    `${resumo.taxa_inadimplencia.toFixed(1)}%`;
-            } catch (erro) {
-                console.error('Erro ao carregar resumo:', erro);
-            }
-        }
-        
-        // Carregar pagamentos
-        async function carregarPagamentos() {
-            try {
-                const filtros = {
-                    aluno: document.getElementById('filtroAluno').value,
-                    status: document.getElementById('filtroStatus').value,
-                    data_inicio: document.getElementById('filtroDataInicio').value,
-                    data_fim: document.getElementById('filtroDataFim').value
-                };
-                
-                const queryString = new URLSearchParams(filtros).toString();
-                const response = await fetch(`/pagamentos?${queryString}`);
-                const pagamentos = await response.json();
-                
-                const listaPagamentos = document.getElementById('listaPagamentos');
-                listaPagamentos.innerHTML = '';
-                
-                pagamentos.forEach(pagamento => {
-                    const div = document.createElement('div');
-                    div.className = 'pagamento-item';
-                    div.innerHTML = `
+    }
+    
+    // Carregar pagamentos
+    async function carregarPagamentos() {
+        try {
+            const response = await fetch('/api/pagamentos');
+            if (!response.ok) throw new Error('Erro ao carregar pagamentos');
+            
+            const pagamentos = await response.json();
+            const listaPagamentos = document.getElementById('listaPagamentos');
+            listaPagamentos.innerHTML = '';
+            
+            pagamentos.forEach(pagamento => {
+                listaPagamentos.innerHTML += `
+                    <div class="pagamento-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h5 class="mb-1">${pagamento.aluno.nome}</h5>
                                 <p class="mb-1">
-                                    <span class="badge bg-${
-                                        pagamento.status === 'pago' ? 'success' : 
-                                        pagamento.status === 'pendente' ? 'warning' : 
-                                        pagamento.status === 'vencido' ? 'danger' : 'secondary'
+                                    <span class="badge ${
+                                        pagamento.status === 'pago' ? 'bg-success' : 
+                                        pagamento.status === 'pendente' ? 'bg-warning' : 
+                                        'bg-danger'
                                     } status-badge">
                                         ${pagamento.status}
                                     </span>
@@ -323,106 +317,76 @@
                                 </p>
                                 <small class="text-muted">
                                     Forma: ${pagamento.forma_pagamento} | 
-                                    ${pagamento.observacoes || 'Sem observações'}
+                                    Vencimento: ${pagamento.data_vencimento ? 
+                                        new Date(pagamento.data_vencimento).toLocaleDateString() : '-'}
                                 </small>
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-outline-primary btn-acao me-2"
                                         onclick="editarPagamento(${pagamento.id})">
-                                    <i class="bi bi-pencil"></i>
+                                    <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger btn-acao"
                                         onclick="excluirPagamento(${pagamento.id})">
-                                    <i class="bi bi-trash"></i>
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
-                    `;
-                    listaPagamentos.appendChild(div);
-                });
-            } catch (erro) {
-                console.error('Erro ao carregar pagamentos:', erro);
-            }
+                    </div>
+                `;
+            });
+        } catch (erro) {
+            console.error('Erro ao carregar pagamentos:', erro);
+            alert('Erro ao carregar pagamentos');
         }
-        
-        // Salvar pagamento
-        async function salvarPagamento() {
-            const dados = {
-                aluno_id: document.getElementById('alunoPagamento').value,
-                valor: parseFloat(document.getElementById('valorPagamento').value),
-                data_pagamento: document.getElementById('dataPagamento').value,
-                forma_pagamento: document.getElementById('formaPagamento').value,
-                status: document.getElementById('statusPagamento').value,
-                observacoes: document.getElementById('observacoesPagamento').value
-            };
-            
-            const pagamentoId = document.getElementById('pagamentoId').value;
-            const method = pagamentoId ? 'PUT' : 'POST';
-            const url = pagamentoId ? `/pagamentos/${pagamentoId}` : '/pagamentos';
-            
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
-                
-                if (response.ok) {
-                    alert('Pagamento salvo com sucesso!');
-                    modalNovoPagamento.hide();
-                    carregarPagamentos();
-                    carregarResumo();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao salvar pagamento');
-                }
-            } catch (erro) {
-                console.error('Erro ao salvar pagamento:', erro);
-                alert('Erro ao salvar pagamento');
-            }
-        }
-        
-        // Event Listeners
-        document.getElementById('btnSalvarPagamento').addEventListener('click', salvarPagamento);
-        
-        // Filtros
-        ['filtroAluno', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim'].forEach(id => {
-            const elemento = document.getElementById(id);
-            if (id === 'filtroAluno') {
-                elemento.addEventListener('input', debounce(carregarPagamentos, 300));
-            } else {
-                elemento.addEventListener('change', carregarPagamentos);
-            }
-        });
-        
-        // Inicialização
-        carregarAlunos();
-        carregarResumo();
-        carregarPagamentos();
-        
-        // Definir data atual como padrão para novo pagamento
-        document.getElementById('dataPagamento').valueAsDate = new Date();
-    });
-    
-    // Função de debounce
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
     }
     
-    // Funções globais
+    // Salvar pagamento
+    async function salvarPagamento() {
+        const dados = {
+            aluno_id: document.getElementById('alunoPagamento').value,
+            valor: document.getElementById('valorPagamento').value,
+            data_pagamento: document.getElementById('dataPagamento').value,
+            forma_pagamento: document.getElementById('formaPagamento').value,
+            status: document.getElementById('statusPagamento').value,
+            observacoes: document.getElementById('observacoesPagamento').value
+        };
+        
+        try {
+            const response = await fetch('/api/pagamentos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            });
+            
+            if (!response.ok) {
+                const erro = await response.json();
+                throw new Error(erro.erro || 'Erro ao salvar pagamento');
+            }
+            
+            alert('Pagamento registrado com sucesso!');
+            document.getElementById('formPagamento').reset();
+            modalNovoPagamento.hide();
+            
+            await Promise.all([
+                carregarPagamentos(),
+                carregarResumo()
+            ]);
+            
+        } catch (erro) {
+            console.error('Erro ao salvar pagamento:', erro);
+            alert(erro.message);
+        }
+    }
+    
+    // Editar pagamento
     async function editarPagamento(id) {
         try {
-            const response = await fetch(`/pagamentos/${id}`);
+            const response = await fetch(`/api/pagamentos/${id}`);
+            if (!response.ok) throw new Error('Erro ao carregar pagamento');
+            
             const pagamento = await response.json();
             
             document.getElementById('pagamentoId').value = pagamento.id;
@@ -431,37 +395,73 @@
             document.getElementById('dataPagamento').value = pagamento.data_pagamento;
             document.getElementById('formaPagamento').value = pagamento.forma_pagamento;
             document.getElementById('statusPagamento').value = pagamento.status;
-            document.getElementById('observacoesPagamento').value = pagamento.observacoes;
+            document.getElementById('observacoesPagamento').value = pagamento.observacoes || '';
             
-            document.querySelector('#modalNovoPagamento .modal-title').textContent = 
-                'Editar Pagamento';
-            new bootstrap.Modal(document.getElementById('modalNovoPagamento')).show();
+            modalNovoPagamento.show();
+            
         } catch (erro) {
             console.error('Erro ao carregar pagamento:', erro);
-            alert('Erro ao carregar dados do pagamento');
+            alert('Erro ao carregar pagamento');
         }
     }
     
+    // Excluir pagamento
     async function excluirPagamento(id) {
-        if (confirm('Tem certeza que deseja excluir este pagamento?')) {
-            try {
-                const response = await fetch(`/pagamentos/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('Pagamento excluído com sucesso!');
-                    carregarPagamentos();
-                    carregarResumo();
-                } else {
-                    const erro = await response.json();
-                    alert(erro.erro || 'Erro ao excluir pagamento');
-                }
-            } catch (erro) {
-                console.error('Erro ao excluir pagamento:', erro);
-                alert('Erro ao excluir pagamento');
-            }
+        if (!confirm('Tem certeza que deseja excluir este pagamento?')) return;
+        
+        try {
+            const response = await fetch(`/api/pagamentos/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) throw new Error('Erro ao excluir pagamento');
+            
+            alert('Pagamento excluído com sucesso!');
+            
+            await Promise.all([
+                carregarPagamentos(),
+                carregarResumo()
+            ]);
+            
+        } catch (erro) {
+            console.error('Erro ao excluir pagamento:', erro);
+            alert('Erro ao excluir pagamento');
         }
     }
+    
+    // Aplicar filtros
+    function aplicarFiltros() {
+        const filtros = {
+            aluno: document.getElementById('filtroAluno').value,
+            status: document.getElementById('filtroStatus').value,
+            dataInicio: document.getElementById('filtroDataInicio').value,
+            dataFim: document.getElementById('filtroDataFim').value
+        };
+        
+        carregarPagamentos(filtros);
+    }
+    
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa o modal
+        window.modalNovoPagamento = new bootstrap.Modal(
+            document.getElementById('modalNovoPagamento')
+        );
+        
+        // Configura o botão de salvar
+        document.getElementById('btnSalvarPagamento').addEventListener('click', salvarPagamento);
+        
+        // Configura os filtros
+        ['filtroAluno', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim'].forEach(id => {
+            document.getElementById(id).addEventListener('change', aplicarFiltros);
+        });
+        
+        // Carrega os dados iniciais
+        Promise.all([
+            carregarAlunos(),
+            carregarPagamentos(),
+            carregarResumo()
+        ]);
+    });
 </script>
 {% endblock %} 
