@@ -251,16 +251,17 @@
             </div>
             <div class="modal-body">
                 <form id="formTreino">
+                    <input type="hidden" id="treinoId" name="id">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Aluno</label>
-                            <select class="form-select" name="aluno" required>
+                            <select class="form-select" id="alunoTreino" name="aluno" required>
                                 <option value="">Selecione...</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Tipo</label>
-                            <select class="form-select" name="tipo" required>
+                            <select class="form-select" id="tipoTreino" name="tipo" required>
                                 <option value="">Selecione...</option>
                                 <option value="musculacao">Musculação</option>
                                 <option value="cardio">Cardio</option>
@@ -269,39 +270,53 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Professor</label>
-                            <select class="form-select" name="professor" required>
+                            <select class="form-select" id="professorTreino" name="professor" required>
                                 <option value="">Selecione...</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Data de Início</label>
-                            <input type="date" class="form-control" name="data_inicio" required>
+                            <input type="date" class="form-control" id="dataInicio" name="data_inicio" required>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Exercícios</label>
-                            <div id="exerciciosContainer">
-                                <!-- Template para exercícios -->
-                                <div class="exercicio-item d-flex align-items-center">
-                                    <input type="text" class="form-control me-2" name="exercicio[]" placeholder="Nome do exercício" required>
-                                    <input type="text" class="form-control me-2" name="series[]" placeholder="Séries" required>
-                                    <input type="text" class="form-control me-2" name="repeticoes[]" placeholder="Repetições" required>
-                                    <input type="text" class="form-control me-2" name="carga[]" placeholder="Carga (kg)" required>
-                                    <button type="button" class="btn-remover-exercicio">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
+                            <div id="listaExercicios">
+                                <!-- Exercícios serão adicionados aqui -->
                             </div>
-                            <button type="button" class="btn btn-primary mt-2" id="btnAdicionarExercicio">
-                                <i class="fas fa-plus me-2"></i>Adicionar Exercício
-                            </button>
+                            <div class="exercicio-form mt-3">
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <select class="form-select" id="exercicioSelect">
+                                            <option value="">Selecione um exercício</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <input type="number" class="form-control" id="series" placeholder="Séries">
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <input type="number" class="form-control" id="repeticoes" placeholder="Repetições">
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <input type="number" class="form-control" id="carga" placeholder="Carga (kg)">
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-12">
+                                        <textarea class="form-control" id="observacoesExercicio" rows="2" placeholder="Observações do exercício"></textarea>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary mt-2" id="btnAdicionarExercicio">
+                                    <i class="fas fa-plus me-2"></i>Adicionar Exercício
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Observações</label>
-                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                            <textarea class="form-control" id="observacoesTreino" name="observacoes" rows="3"></textarea>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Status</label>
-                            <select class="form-select" name="status" required>
+                            <select class="form-select" id="statusTreino" name="status" required>
                                 <option value="ativo">Ativo</option>
                                 <option value="inativo">Inativo</option>
                             </select>
@@ -658,14 +673,25 @@
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
         // Configura o formulário
-        document.getElementById('formTreino').addEventListener('submit', salvarTreino);
+        const formTreino = document.getElementById('formTreino');
+        const btnSalvarTreino = document.getElementById('btnSalvarTreino');
+        
+        if (formTreino && btnSalvarTreino) {
+            btnSalvarTreino.addEventListener('click', salvarTreino);
+        }
         
         // Configura o botão de adicionar exercício
-        document.getElementById('btnAdicionarExercicio').addEventListener('click', adicionarExercicio);
+        const btnAdicionarExercicio = document.getElementById('btnAdicionarExercicio');
+        if (btnAdicionarExercicio) {
+            btnAdicionarExercicio.addEventListener('click', adicionarExercicio);
+        }
         
         // Configura os filtros
         ['filtroAluno', 'filtroTipo', 'filtroProfessor', 'filtroStatus'].forEach(id => {
-            document.getElementById(id).addEventListener('change', aplicarFiltros);
+            const elemento = document.getElementById(id);
+            if (elemento) {
+                elemento.addEventListener('change', aplicarFiltros);
+            }
         });
         
         // Carrega os dados iniciais
@@ -674,7 +700,9 @@
             carregarProfessores(),
             carregarExercicios(),
             carregarTreinos()
-        ]);
+        ]).catch(erro => {
+            console.error('Erro ao carregar dados iniciais:', erro);
+        });
     });
 </script>
 {% endblock %} 

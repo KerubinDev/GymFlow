@@ -830,16 +830,19 @@ def professores():
 @rotas.route('/api/professores', methods=['GET'])
 @login_required
 def listar_professores():
-    """Lista todos os professores."""
-    professores = Professor.query.all()
-    return jsonify([{
-        'id': professor.id,
-        'nome': professor.usuario.nome,
-        'email': professor.usuario.email,
-        'telefone': professor.telefone,
-        'especialidades': professor.especialidades,
-        'ativo': professor.status == 'ativo'
-    } for professor in professores])
+    """Lista todos os professores ativos."""
+    try:
+        professores = Professor.query.filter_by(status='ativo').all()
+        return jsonify([{
+            'id': professor.id,
+            'nome': professor.usuario.nome,
+            'email': professor.usuario.email,
+            'telefone': professor.telefone,
+            'especialidades': professor.especialidades,
+            'ativo': True
+        } for professor in professores])
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/professores', methods=['POST'])
