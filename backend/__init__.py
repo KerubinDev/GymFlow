@@ -94,5 +94,17 @@ def create_app(config_name=None):
     with app.app_context():
         from .models import init_db
         init_db()
+        
+        # Cria um usuário gerente padrão se não existir
+        if not Usuario.query.filter_by(email='admin@gymflow.com').first():
+            gerente = Usuario(
+                nome='Administrador',
+                email='admin@gymflow.com',
+                tipo='gerente',
+                status='ativo'
+            )
+            gerente.senha = 'admin123'  # Será hasheada automaticamente
+            db.session.add(gerente)
+            db.session.commit()
     
     return app 
