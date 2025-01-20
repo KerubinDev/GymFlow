@@ -209,6 +209,7 @@
             background-color: var(--card-bg);
             border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 0;
         }
 
         .table thead th {
@@ -216,16 +217,24 @@
             border-color: rgba(255, 255, 255, 0.1);
             color: var(--light-color);
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .table tbody td {
             border-color: rgba(255, 255, 255, 0.1);
             color: var(--light-color);
+            background-color: rgba(0, 0, 0, 0.1);
+            vertical-align: middle;
         }
 
         .table-hover tbody tr:hover {
             background-color: rgba(255, 255, 255, 0.05);
-            color: var(--primary-color);
+            color: var(--light-color);
+        }
+
+        .table-hover tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light-color);
         }
 
         /* Cards */
@@ -320,12 +329,16 @@
         /* Badges e Labels */
         .badge {
             padding: 0.5em 1em;
-            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
-        .badge-primary {
-            background-color: var(--primary-color);
-            color: var(--dark-color);
+        .badge.bg-success {
+            background-color: rgba(40, 167, 69, 0.9) !important;
+        }
+
+        .badge.bg-danger {
+            background-color: rgba(220, 53, 69, 0.9) !important;
         }
 
         /* Paginação */
@@ -371,6 +384,69 @@
         .alert-info {
             background: rgba(23, 162, 184, 0.2);
             border-color: rgba(23, 162, 184, 0.3);
+        }
+
+        /* Botões na tabela */
+        .table .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border-radius: 0.2rem;
+        }
+
+        .table .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background-color: transparent;
+        }
+
+        .table .btn-outline-primary:hover {
+            color: var(--dark-color);
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .table .btn-outline-danger {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            background-color: transparent;
+        }
+
+        .table .btn-outline-danger:hover {
+            color: var(--light-color);
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Inputs e Selects dentro de tabelas */
+        .table input.form-control,
+        .table select.form-select {
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light-color);
+        }
+
+        .table input.form-control:focus,
+        .table select.form-select:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            color: var(--light-color);
+        }
+
+        /* Textos e Labels */
+        h1, h2, h3, h4, h5, h6,
+        .h1, .h2, .h3, .h4, .h5, .h6 {
+            color: var(--light-color);
+            font-weight: 600;
+        }
+
+        p, span, div {
+            color: var(--light-color);
+        }
+
+        label {
+            color: var(--light-color);
+            font-weight: 500;
         }
     </style>
 
