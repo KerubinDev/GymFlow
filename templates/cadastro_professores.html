@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Professores - GymFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .table {
+        color: var(--light-color);
+    }
+
+    .table th {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .table td {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-floating {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        font-size: 24px;
+        line-height: 60px;
+        padding: 0;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card glass-card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="card-title mb-0">Professores</h4>
+                <button type="button" class="btn btn-primary" onclick="abrirModalProfessor()">
+                    <i class="fas fa-plus"></i> Novo Professor
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Especialidades</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaProfessores">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cadastro/Edição -->
+<div class="modal fade" id="modalProfessor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProfessorTitulo">Novo Professor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProfessor">
+                    <input type="hidden" id="professorId">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="especialidades" class="form-label">Especialidades</label>
+                        <select class="form-select" id="especialidades" multiple required>
+                            <option value="Musculação">Musculação</option>
+                            <option value="Crossfit">Crossfit</option>
+                            <option value="Yoga">Yoga</option>
+                            <option value="Pilates">Pilates</option>
+                            <option value="Funcional">Funcional</option>
+                            <option value="Dança">Dança</option>
+                            <option value="Lutas">Lutas</option>
+                            <option value="Natação">Natação</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="divSenha">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha">
+                        <small class="text-muted">Deixe em branco para manter a senha atual</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarProfessor()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let professorAtual = null;
+
+// Carrega a lista de professores ao carregar a página
+document.addEventListener('DOMContentLoaded', carregarProfessores);
+
+// Aplica máscara ao telefone
+$('#telefone').mask('(00) 00000-0000');
+
+// Função para carregar a lista de professores
+async function carregarProfessores() {
+    try {
+        const response = await fetch('/api/professores');
+        if (!response.ok) throw new Error('Erro ao carregar professores');
+        const professores = await response.json();
+        
+        const tbody = document.getElementById('tabelaProfessores');
+        tbody.innerHTML = '';
+        
+        professores.forEach(professor => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${professor.nome}</td>
+                <td>${professor.email}</td>
+                <td>${professor.telefone}</td>
+                <td>${professor.especialidades.join(', ')}</td>
+                <td>
+                    <span class="badge ${professor.ativo ? 'bg-success' : 'bg-danger'}">
+                        ${professor.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editarProfessor(${professor.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="excluirProfessor(${professor.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar professores');
+    }
+}
+
+// Função para abrir o modal de cadastro
+function abrirModalProfessor() {
+    professorAtual = null;
+    document.getElementById('modalProfessorTitulo').textContent = 'Novo Professor';
+    document.getElementById('formProfessor').reset();
+    document.getElementById('professorId').value = '';
+    document.getElementById('divSenha').style.display = 'block';
+    document.getElementById('senha').required = true;
+    $('#modalProfessor').modal('show');
+}
+
+// Função para editar um professor
+async function editarProfessor(id) {
+    try {
+        const response = await fetch(`/api/professores/${id}`);
+        if (!response.ok) throw new Error('Erro ao carregar professor');
+        const professor = await response.json();
+        
+        professorAtual = professor;
+        document.getElementById('modalProfessorTitulo').textContent = 'Editar Professor';
+        document.getElementById('professorId').value = professor.id;
+        document.getElementById('nome').value = professor.nome;
+        document.getElementById('email').value = professor.email;
+        document.getElementById('telefone').value = professor.telefone;
+        
+        // Seleciona as especialidades
+        const select = document.getElementById('especialidades');
+        Array.from(select.options).forEach(option => {
+            option.selected = professor.especialidades.includes(option.value);
+        });
+        
+        // Senha não é obrigatória na edição
+        document.getElementById('senha').required = false;
+        document.getElementById('divSenha').style.display = 'block';
+        
+        $('#modalProfessor').modal('show');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar professor');
+    }
+}
+
+// Função para salvar um professor
+async function salvarProfessor() {
+    const form = document.getElementById('formProfessor');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const id = document.getElementById('professorId').value;
+    const dados = {
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        telefone: document.getElementById('telefone').value,
+        especialidades: Array.from(document.getElementById('especialidades').selectedOptions).map(opt => opt.value),
+        senha: document.getElementById('senha').value
+    };
+    
+    try {
+        const url = id ? `/api/professores/${id}` : '/api/professores';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.erro || 'Erro ao salvar professor');
+        }
+        
+        $('#modalProfessor').modal('hide');
+        await carregarProfessores();
+        alert(id ? 'Professor atualizado com sucesso!' : 'Professor cadastrado com sucesso!');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert(error.message);
+    }
+}
+
+// Função para excluir um professor
+async function excluirProfessor(id) {
+    if (!confirm('Tem certeza que deseja excluir este professor?')) return;
+    
+    try {
+        const response = await fetch(`/api/professores/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.erro || 'Erro ao excluir professor');
+        }
+        
+        await carregarProfessores();
+        alert('Professor excluído com sucesso!');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert(error.message);
+    }
+}
+</script>
+{% endblock %} 

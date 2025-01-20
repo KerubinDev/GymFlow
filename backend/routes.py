@@ -847,18 +847,134 @@ def criar_exercicio():
         return jsonify({'erro': str(e)}), 400
 
 
+@rotas.route('/professores')
+@login_required
+@gerente_required
+def professores():
+    """Rota para a página de cadastro de professores."""
+    return render_template('cadastro_professores.html')
+
+
 @rotas.route('/api/professores', methods=['GET'])
 @login_required
 def listar_professores():
-    """Lista todos os professores ativos."""
-    professores = Professor.query.filter_by(ativo=True).all()
+    """Lista todos os professores."""
+    professores = Professor.query.all()
     return jsonify([{
         'id': professor.id,
-        'nome': professor.nome,
-        'email': professor.email,
+        'nome': professor.usuario.nome,
+        'email': professor.usuario.email,
         'telefone': professor.telefone,
-        'especialidades': professor.especialidades
+        'especialidades': professor.especialidades,
+        'ativo': professor.status == 'ativo'
     } for professor in professores])
+
+
+@rotas.route('/api/professores', methods=['POST'])
+@login_required
+@gerente_required
+def criar_professor():
+    """Cria um novo professor."""
+    dados = request.get_json()
+    
+    try:
+        # Cria o usuário primeiro
+        usuario = Usuario(
+            nome=dados['nome'],
+            email=dados['email'],
+            tipo='professor',
+            status='ativo'
+        )
+        usuario.senha = dados['senha']
+        db.session.add(usuario)
+        db.session.flush()  # Gera o ID do usuário
+        
+        # Cria o professor associado ao usuário
+        professor = Professor(
+            usuario_id=usuario.id,
+            telefone=dados['telefone'],
+            especialidades=dados['especialidades'],
+            status='ativo'
+        )
+        db.session.add(professor)
+        db.session.commit()
+        
+        return jsonify({
+            'mensagem': 'Professor cadastrado com sucesso',
+            'id': professor.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/professores/<int:professor_id>', methods=['GET'])
+@login_required
+def obter_professor(professor_id):
+    """Obtém os detalhes de um professor específico."""
+    professor = Professor.query.get_or_404(professor_id)
+    return jsonify({
+        'id': professor.id,
+        'nome': professor.usuario.nome,
+        'email': professor.usuario.email,
+        'telefone': professor.telefone,
+        'especialidades': professor.especialidades,
+        'ativo': professor.status == 'ativo'
+    })
+
+
+@rotas.route('/api/professores/<int:professor_id>', methods=['PUT'])
+@login_required
+@gerente_required
+def atualizar_professor(professor_id):
+    """Atualiza os dados de um professor."""
+    professor = Professor.query.get_or_404(professor_id)
+    dados = request.get_json()
+    
+    try:
+        # Atualiza os dados do usuário
+        professor.usuario.nome = dados['nome']
+        professor.usuario.email = dados['email']
+        if dados.get('senha'):
+            professor.usuario.senha = dados['senha']
+        
+        # Atualiza os dados do professor
+        professor.telefone = dados['telefone']
+        professor.especialidades = dados['especialidades']
+        
+        db.session.commit()
+        return jsonify({'mensagem': 'Professor atualizado com sucesso'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
+
+
+@rotas.route('/api/professores/<int:professor_id>', methods=['DELETE'])
+@login_required
+@gerente_required
+def deletar_professor(professor_id):
+    """Inativa um professor."""
+    professor = Professor.query.get_or_404(professor_id)
+    
+    try:
+        # Verifica se o professor tem turmas ativas
+        if any(turma.status == 'ativa' for turma in professor.turmas):
+            return jsonify({
+                'erro': 'Não é possível excluir um professor com turmas ativas'
+            }), 400
+        
+        # Inativa o professor e seu usuário
+        professor.status = 'inativo'
+        professor.usuario.status = 'inativo'
+        
+        db.session.commit()
+        return jsonify({'mensagem': 'Professor inativado com sucesso'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
 
 
 @rotas.route('/api/turmas', methods=['GET'])
