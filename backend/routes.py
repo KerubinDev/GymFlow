@@ -832,16 +832,21 @@ def professores():
 def listar_professores():
     """Lista todos os professores ativos."""
     try:
-        professores = Professor.query.filter_by(status='ativo').all()
+        professores = Professor.query.join(Professor.usuario).filter(
+            Professor.status == 'ativo',
+            Usuario.status == 'ativo'
+        ).all()
+        
         return jsonify([{
             'id': professor.id,
-            'nome': professor.usuario.nome if professor.usuario else '',
-            'email': professor.usuario.email if professor.usuario else '',
+            'nome': professor.usuario.nome,
+            'email': professor.usuario.email,
             'telefone': professor.telefone,
             'especialidades': professor.especialidades,
-            'ativo': professor.status == 'ativo'
-        } for professor in professores])
+            'ativo': True
+        } for professor in professores if professor.usuario])
     except Exception as e:
+        print(f"Erro ao listar professores: {str(e)}")  # Log do erro
         return jsonify({'erro': str(e)}), 500
 
 
