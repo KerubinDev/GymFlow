@@ -1,4 +1,10 @@
-"""Funções utilitárias para o sistema GymFlow."""
+"""Funções utilitárias para o sistema GymFlow.
+
+Autor: Kelvin Moraes (Kerubin)
+Email: kelvin.moraes117@gmail.com
+GitHub: @KerubinDev
+Repositório: https://github.com/KerubinDev/GymFlow
+"""
 
 import os
 import re

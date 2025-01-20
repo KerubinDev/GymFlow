@@ -112,13 +112,14 @@ gymflow/
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está licenciado sob a GNU General Public License v3.0 - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## Contato
+## Autor
 
-Kelvin Moraes - kelvin.moraes117@gmail.com
-
-Link do projeto: [https://github.com/seu-usuario/gymflow](https://github.com/seu-usuario/gymflow)
+**Kelvin Moraes (Kerubin)**
+- Email: kelvin.moraes117@gmail.com
+- GitHub: [@KerubinDev](https://github.com/KerubinDev)
+- Projeto: [GymFlow](https://github.com/KerubinDev/GymFlow)
 
 ## Agradecimentos
 

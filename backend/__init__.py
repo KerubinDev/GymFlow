@@ -1,4 +1,10 @@
-"""Inicialização da aplicação Flask."""
+"""Inicialização da aplicação Flask.
+
+Autor: Kelvin Moraes (Kerubin)
+Email: kelvin.moraes117@gmail.com
+GitHub: @KerubinDev
+Repositório: https://github.com/KerubinDev/GymFlow
+"""
 
 import os
 from datetime import datetime
