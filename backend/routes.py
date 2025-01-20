@@ -553,32 +553,70 @@ def obter_aluno(aluno_id):
 @rotas.route('/api/pagamentos', methods=['GET'])
 @login_required
 def listar_pagamentos():
-    """API para listar pagamentos."""
-    pagamentos = Pagamento.query.all()
-    return jsonify([pagamento.to_dict() for pagamento in pagamentos])
+    """Lista os pagamentos com filtros."""
+    aluno_id = request.args.get('aluno_id')
+    mes_referencia = request.args.get('mes_referencia')
+    status = request.args.get('status')
+    
+    query = Pagamento.query
+    
+    if aluno_id:
+        query = query.filter_by(aluno_id=aluno_id)
+    if mes_referencia:
+        query = query.filter_by(mes_referencia=mes_referencia)
+    if status:
+        query = query.filter_by(status=status)
+    
+    pagamentos = query.order_by(Pagamento.mes_referencia.desc()).all()
+    return jsonify([{
+        'id': pagamento.id,
+        'aluno': {
+            'id': pagamento.aluno.id,
+            'nome': pagamento.aluno.nome,
+            'plano': {
+                'nome': pagamento.aluno.plano.nome if pagamento.aluno.plano else 'Sem plano'
+            }
+        },
+        'mes_referencia': pagamento.mes_referencia,
+        'data_pagamento': pagamento.data_pagamento.strftime('%Y-%m-%d') if pagamento.data_pagamento else None,
+        'status': pagamento.status,
+        'observacoes': pagamento.observacoes
+    } for pagamento in pagamentos])
 
 
 @rotas.route('/api/pagamentos', methods=['POST'])
 @login_required
 def criar_pagamento():
-    """API para criar um novo pagamento."""
+    """Cria um novo registro de pagamento."""
     dados = request.get_json()
     
     try:
+        # Verifica se já existe pagamento para este aluno/mês
+        pagamento_existente = Pagamento.query.filter_by(
+            aluno_id=dados['aluno_id'],
+            mes_referencia=dados['mes_referencia']
+        ).first()
+        
+        if pagamento_existente:
+            return jsonify({
+                'erro': 'Já existe um pagamento registrado para este aluno neste mês'
+            }), 400
+        
         pagamento = Pagamento(
             aluno_id=dados['aluno_id'],
-            valor=float(dados['valor']),
-            data_pagamento=datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date(),
-            forma_pagamento=dados['forma_pagamento'],
+            mes_referencia=dados['mes_referencia'],
+            data_pagamento=datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date() if dados.get('data_pagamento') else None,
             status=dados['status'],
-            observacoes=dados.get('observacoes'),
-            data_vencimento=datetime.strptime(dados['data_vencimento'], '%Y-%m-%d').date() if dados.get('data_vencimento') else None
+            observacoes=dados.get('observacoes', '')
         )
         
         db.session.add(pagamento)
         db.session.commit()
         
-        return jsonify(pagamento.to_dict()), 201
+        return jsonify({
+            'mensagem': 'Pagamento registrado com sucesso',
+            'id': pagamento.id
+        }), 201
         
     except Exception as e:
         db.session.rollback()
@@ -588,28 +626,31 @@ def criar_pagamento():
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['PUT'])
 @login_required
 def atualizar_pagamento(pagamento_id):
-    """API para atualizar um pagamento existente."""
+    """Atualiza um registro de pagamento existente."""
     pagamento = Pagamento.query.get_or_404(pagamento_id)
     dados = request.get_json()
     
     try:
-        if 'aluno_id' in dados:
-            pagamento.aluno_id = dados['aluno_id']
-        if 'valor' in dados:
-            pagamento.valor = float(dados['valor'])
-        if 'data_pagamento' in dados:
-            pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date()
-        if 'forma_pagamento' in dados:
-            pagamento.forma_pagamento = dados['forma_pagamento']
-        if 'status' in dados:
-            pagamento.status = dados['status']
-        if 'observacoes' in dados:
-            pagamento.observacoes = dados['observacoes']
-        if 'data_vencimento' in dados:
-            pagamento.data_vencimento = datetime.strptime(dados['data_vencimento'], '%Y-%m-%d').date() if dados['data_vencimento'] else None
+        # Verifica se já existe outro pagamento para este aluno/mês
+        pagamento_existente = Pagamento.query.filter(
+            Pagamento.id != pagamento_id,
+            Pagamento.aluno_id == dados['aluno_id'],
+            Pagamento.mes_referencia == dados['mes_referencia']
+        ).first()
+        
+        if pagamento_existente:
+            return jsonify({
+                'erro': 'Já existe um pagamento registrado para este aluno neste mês'
+            }), 400
+        
+        pagamento.aluno_id = dados['aluno_id']
+        pagamento.mes_referencia = dados['mes_referencia']
+        pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date() if dados.get('data_pagamento') else None
+        pagamento.status = dados['status']
+        pagamento.observacoes = dados.get('observacoes', '')
         
         db.session.commit()
-        return jsonify(pagamento.to_dict())
+        return jsonify({'mensagem': 'Pagamento atualizado com sucesso'})
         
     except Exception as e:
         db.session.rollback()
@@ -619,13 +660,13 @@ def atualizar_pagamento(pagamento_id):
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['DELETE'])
 @login_required
 def deletar_pagamento(pagamento_id):
-    """API para deletar um pagamento."""
+    """Deleta um registro de pagamento."""
     pagamento = Pagamento.query.get_or_404(pagamento_id)
     
     try:
         db.session.delete(pagamento)
         db.session.commit()
-        return '', 204
+        return jsonify({'mensagem': 'Registro excluído com sucesso'})
         
     except Exception as e:
         db.session.rollback()
@@ -635,9 +676,16 @@ def deletar_pagamento(pagamento_id):
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['GET'])
 @login_required
 def obter_pagamento(pagamento_id):
-    """API para obter detalhes de um pagamento específico."""
+    """Obtém os detalhes de um pagamento específico."""
     pagamento = Pagamento.query.get_or_404(pagamento_id)
-    return jsonify(pagamento.to_dict())
+    return jsonify({
+        'id': pagamento.id,
+        'aluno_id': pagamento.aluno_id,
+        'mes_referencia': pagamento.mes_referencia,
+        'data_pagamento': pagamento.data_pagamento.strftime('%Y-%m-%d') if pagamento.data_pagamento else None,
+        'status': pagamento.status,
+        'observacoes': pagamento.observacoes
+    })
 
 
 @rotas.route('/api/pagamentos/resumo', methods=['GET'])

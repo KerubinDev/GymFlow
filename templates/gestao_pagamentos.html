@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Pagamentos - GymFlow{% endblock %}
+{% block title %}Gestão de Pagamentos - GymFlow{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -74,77 +74,63 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestão de Pagamentos</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoPagamento">
-            <i class="bi bi-plus-lg"></i> Novo Pagamento
-        </button>
-    </div>
-    
-    <!-- Resumo Financeiro -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="resumo-card">
-                <div class="resumo-valor" id="totalRecebido">R$ 0,00</div>
-                <div class="resumo-label">Total Recebido (Mês)</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="resumo-card">
-                <div class="resumo-valor" id="totalPendente">R$ 0,00</div>
-                <div class="resumo-label">Total Pendente</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="resumo-card">
-                <div class="resumo-valor" id="totalVencido">R$ 0,00</div>
-                <div class="resumo-label">Total Vencido</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="resumo-card">
-                <div class="resumo-valor" id="taxaInadimplencia">0%</div>
-                <div class="resumo-label">Taxa de Inadimplência</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Filtros -->
-    <div class="filtro-container">
-        <div class="row">
-            <div class="col-md-3">
-                <label for="filtroAluno" class="form-label">Aluno</label>
-                <input type="text" class="form-control" id="filtroAluno" 
-                       placeholder="Buscar por nome">
-            </div>
-            <div class="col-md-3">
-                <label for="filtroStatus" class="form-label">Status</label>
-                <select class="form-select" id="filtroStatus">
-                    <option value="">Todos</option>
-                    <option value="pago">Pago</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="vencido">Vencido</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroDataInicio" class="form-label">Data Início</label>
-                <input type="date" class="form-control" id="filtroDataInicio">
-            </div>
-            <div class="col-md-3">
-                <label for="filtroDataFim" class="form-label">Data Fim</label>
-                <input type="date" class="form-control" id="filtroDataFim">
-            </div>
-        </div>
-    </div>
-    
-    <!-- Lista de Pagamentos -->
-    <div class="row">
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div id="listaPagamentos">
-                        <!-- Preenchido via JavaScript -->
+                    <h5 class="card-title">Filtros</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filtroAluno" class="form-label">Aluno</label>
+                            <select id="filtroAluno" class="form-select">
+                                <option value="">Todos os alunos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filtroMes" class="form-label">Mês</label>
+                            <input type="month" id="filtroMes" class="form-select" value="{{ datetime.now().strftime('%Y-%m') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filtroStatus" class="form-label">Status</label>
+                            <select id="filtroStatus" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="pago">Pago</option>
+                                <option value="pendente">Pendente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title">Pagamentos</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPagamento">
+                            <i class="fas fa-plus me-2"></i>Registrar Pagamento
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Aluno</th>
+                                    <th>Plano</th>
+                                    <th>Mês Referência</th>
+                                    <th>Status</th>
+                                    <th>Data Pagamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaPagamentos">
+                                <!-- Preenchido via JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -152,12 +138,12 @@
     </div>
 </div>
 
-<!-- Modal Novo Pagamento -->
-<div class="modal fade" id="modalNovoPagamento" tabindex="-1">
+<!-- Modal de Pagamento -->
+<div class="modal fade" id="modalPagamento" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Pagamento</h5>
+                <h5 class="modal-title">Registrar Pagamento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -166,64 +152,38 @@
                     
                     <div class="mb-3">
                         <label for="alunoPagamento" class="form-label">Aluno</label>
-                        <select class="form-select" id="alunoPagamento" required>
+                        <select id="alunoPagamento" class="form-select" required>
                             <option value="">Selecione um aluno</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="valorPagamento" class="form-label">Valor</label>
-                        <div class="input-group">
-                            <span class="input-group-text">R$</span>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="valorPagamento" 
-                                   step="0.01" 
-                                   min="0" 
-                                   required>
-                        </div>
+                        <label for="mesReferencia" class="form-label">Mês Referência</label>
+                        <input type="month" id="mesReferencia" class="form-control" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="dataPagamento" class="form-label">Data do Pagamento</label>
-                        <input type="date" class="form-control" id="dataPagamento" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
-                        <select class="form-select" id="formaPagamento" required>
-                            <option value="dinheiro">Dinheiro</option>
-                            <option value="cartao_credito">Cartão de Crédito</option>
-                            <option value="cartao_debito">Cartão de Débito</option>
-                            <option value="pix">PIX</option>
-                            <option value="transferencia">Transferência Bancária</option>
-                        </select>
+                        <input type="date" id="dataPagamento" class="form-control">
                     </div>
                     
                     <div class="mb-3">
                         <label for="statusPagamento" class="form-label">Status</label>
-                        <select class="form-select" id="statusPagamento" required>
+                        <select id="statusPagamento" class="form-select" required>
                             <option value="pago">Pago</option>
                             <option value="pendente">Pendente</option>
-                            <option value="cancelado">Cancelado</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="observacoesPagamento" class="form-label">Observações</label>
-                        <textarea class="form-control" 
-                                  id="observacoesPagamento" 
-                                  rows="3"></textarea>
+                        <textarea id="observacoesPagamento" class="form-control" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnSalvarPagamento">
-                    Salvar
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarPagamento">Salvar</button>
             </div>
         </div>
     </div>
@@ -231,18 +191,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- jQuery Mask Plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
 <script>
-    // Formatar valores monetários
-    function formatarMoeda(valor) {
-        return valor.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    }
-    
     // Carregar alunos
     async function carregarAlunos() {
         try {
@@ -251,12 +200,20 @@
             
             const alunos = await response.json();
             const selectAluno = document.getElementById('alunoPagamento');
-            selectAluno.innerHTML = '<option value="">Selecione um aluno</option>';
+            const filtroAluno = document.getElementById('filtroAluno');
             
-            alunos.forEach(aluno => {
-                selectAluno.innerHTML += `
-                    <option value="${aluno.id}">${aluno.nome} - ${aluno.cpf}</option>
-                `;
+            [selectAluno, filtroAluno].forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">Selecione um aluno</option>';
+                alunos.forEach(aluno => {
+                    if (aluno.plano) {
+                        select.innerHTML += `
+                            <option value="${aluno.id}" data-plano="${aluno.plano.nome}">
+                                ${aluno.nome} - ${aluno.plano.nome}
+                            </option>
+                        `;
+                    }
+                });
             });
         } catch (erro) {
             console.error('Erro ao carregar alunos:', erro);
@@ -264,75 +221,54 @@
         }
     }
     
-    // Carregar resumo financeiro
-    async function carregarResumo() {
-        try {
-            const response = await fetch('/api/pagamentos/resumo');
-            if (!response.ok) throw new Error('Erro ao carregar resumo');
-            
-            const resumo = await response.json();
-            
-            document.getElementById('totalRecebido').textContent = formatarMoeda(resumo.total_recebido);
-            document.getElementById('totalPendente').textContent = formatarMoeda(resumo.total_pendente);
-            document.getElementById('totalVencido').textContent = formatarMoeda(resumo.total_vencido);
-            document.getElementById('taxaInadimplencia').textContent = 
-                resumo.taxa_inadimplencia.toFixed(1) + '%';
-            
-        } catch (erro) {
-            console.error('Erro ao carregar resumo:', erro);
-            alert('Erro ao carregar resumo financeiro');
-        }
-    }
-    
     // Carregar pagamentos
     async function carregarPagamentos() {
         try {
-            const response = await fetch('/api/pagamentos');
+            const filtroAluno = document.getElementById('filtroAluno').value;
+            const filtroMes = document.getElementById('filtroMes').value;
+            const filtroStatus = document.getElementById('filtroStatus').value;
+            
+            const params = new URLSearchParams();
+            if (filtroAluno) params.append('aluno_id', filtroAluno);
+            if (filtroMes) params.append('mes_referencia', filtroMes);
+            if (filtroStatus) params.append('status', filtroStatus);
+            
+            const response = await fetch(`/api/pagamentos?${params}`);
             if (!response.ok) throw new Error('Erro ao carregar pagamentos');
             
             const pagamentos = await response.json();
-            const listaPagamentos = document.getElementById('listaPagamentos');
-            listaPagamentos.innerHTML = '';
+            const tbody = document.getElementById('listaPagamentos');
+            tbody.innerHTML = '';
             
             pagamentos.forEach(pagamento => {
-                listaPagamentos.innerHTML += `
-                    <div class="pagamento-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="mb-1">${pagamento.aluno.nome}</h5>
-                                <p class="mb-1">
-                                    <span class="badge ${
-                                        pagamento.status === 'pago' ? 'bg-success' : 
-                                        pagamento.status === 'pendente' ? 'bg-warning' : 
-                                        'bg-danger'
-                                    } status-badge">
-                                        ${pagamento.status}
-                                    </span>
-                                    <small class="text-muted ms-2">
-                                        Valor: ${formatarMoeda(pagamento.valor)}
-                                    </small>
-                                    <small class="text-muted ms-2">
-                                        Data: ${new Date(pagamento.data_pagamento).toLocaleDateString()}
-                                    </small>
-                                </p>
-                                <small class="text-muted">
-                                    Forma: ${pagamento.forma_pagamento} | 
-                                    Vencimento: ${pagamento.data_vencimento ? 
-                                        new Date(pagamento.data_vencimento).toLocaleDateString() : '-'}
-                                </small>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary btn-acao me-2"
-                                        onclick="editarPagamento(${pagamento.id})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger btn-acao"
-                                        onclick="excluirPagamento(${pagamento.id})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${pagamento.aluno.nome}</td>
+                        <td>${pagamento.aluno.plano.nome}</td>
+                        <td>${new Date(pagamento.mes_referencia + '-01').toLocaleDateString('pt-BR', {
+                            month: 'long',
+                            year: 'numeric'
+                        })}</td>
+                        <td>
+                            <span class="badge ${
+                                pagamento.status === 'pago' ? 'bg-success' : 'bg-warning'
+                            }">
+                                ${pagamento.status}
+                            </span>
+                        </td>
+                        <td>${pagamento.data_pagamento ? 
+                            new Date(pagamento.data_pagamento).toLocaleDateString() : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                    onclick="editarPagamento(${pagamento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="excluirPagamento(${pagamento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
                 `;
             });
         } catch (erro) {
@@ -345,16 +281,20 @@
     async function salvarPagamento() {
         const dados = {
             aluno_id: document.getElementById('alunoPagamento').value,
-            valor: document.getElementById('valorPagamento').value,
-            data_pagamento: document.getElementById('dataPagamento').value,
-            forma_pagamento: document.getElementById('formaPagamento').value,
+            mes_referencia: document.getElementById('mesReferencia').value,
+            data_pagamento: document.getElementById('dataPagamento').value || null,
             status: document.getElementById('statusPagamento').value,
             observacoes: document.getElementById('observacoesPagamento').value
         };
         
         try {
-            const response = await fetch('/api/pagamentos', {
-                method: 'POST',
+            const pagamentoId = document.getElementById('pagamentoId').value;
+            const url = pagamentoId ? 
+                `/api/pagamentos/${pagamentoId}` : '/api/pagamentos';
+            const method = pagamentoId ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -368,12 +308,11 @@
             
             alert('Pagamento registrado com sucesso!');
             document.getElementById('formPagamento').reset();
-            modalNovoPagamento.hide();
             
-            await Promise.all([
-                carregarPagamentos(),
-                carregarResumo()
-            ]);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalPagamento'));
+            if (modal) modal.hide();
+            
+            carregarPagamentos();
             
         } catch (erro) {
             console.error('Erro ao salvar pagamento:', erro);
@@ -391,13 +330,13 @@
             
             document.getElementById('pagamentoId').value = pagamento.id;
             document.getElementById('alunoPagamento').value = pagamento.aluno_id;
-            document.getElementById('valorPagamento').value = pagamento.valor;
-            document.getElementById('dataPagamento').value = pagamento.data_pagamento;
-            document.getElementById('formaPagamento').value = pagamento.forma_pagamento;
+            document.getElementById('mesReferencia').value = pagamento.mes_referencia;
+            document.getElementById('dataPagamento').value = pagamento.data_pagamento || '';
             document.getElementById('statusPagamento').value = pagamento.status;
             document.getElementById('observacoesPagamento').value = pagamento.observacoes || '';
             
-            modalNovoPagamento.show();
+            const modal = new bootstrap.Modal(document.getElementById('modalPagamento'));
+            modal.show();
             
         } catch (erro) {
             console.error('Erro ao carregar pagamento:', erro);
@@ -407,7 +346,7 @@
     
     // Excluir pagamento
     async function excluirPagamento(id) {
-        if (!confirm('Tem certeza que deseja excluir este pagamento?')) return;
+        if (!confirm('Tem certeza que deseja excluir este registro?')) return;
         
         try {
             const response = await fetch(`/api/pagamentos/${id}`, {
@@ -416,12 +355,8 @@
             
             if (!response.ok) throw new Error('Erro ao excluir pagamento');
             
-            alert('Pagamento excluído com sucesso!');
-            
-            await Promise.all([
-                carregarPagamentos(),
-                carregarResumo()
-            ]);
+            alert('Registro excluído com sucesso!');
+            carregarPagamentos();
             
         } catch (erro) {
             console.error('Erro ao excluir pagamento:', erro);
@@ -429,38 +364,24 @@
         }
     }
     
-    // Aplicar filtros
-    function aplicarFiltros() {
-        const filtros = {
-            aluno: document.getElementById('filtroAluno').value,
-            status: document.getElementById('filtroStatus').value,
-            dataInicio: document.getElementById('filtroDataInicio').value,
-            dataFim: document.getElementById('filtroDataFim').value
-        };
-        
-        carregarPagamentos(filtros);
-    }
-    
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // Inicializa o modal
-        window.modalNovoPagamento = new bootstrap.Modal(
-            document.getElementById('modalNovoPagamento')
-        );
-        
         // Configura o botão de salvar
         document.getElementById('btnSalvarPagamento').addEventListener('click', salvarPagamento);
         
         // Configura os filtros
-        ['filtroAluno', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim'].forEach(id => {
-            document.getElementById(id).addEventListener('change', aplicarFiltros);
+        ['filtroAluno', 'filtroMes', 'filtroStatus'].forEach(id => {
+            document.getElementById(id).addEventListener('change', carregarPagamentos);
         });
+        
+        // Define o mês atual no filtro
+        document.getElementById('filtroMes').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('mesReferencia').value = new Date().toISOString().slice(0, 7);
         
         // Carrega os dados iniciais
         Promise.all([
             carregarAlunos(),
-            carregarPagamentos(),
-            carregarResumo()
+            carregarPagamentos()
         ]);
     });
 </script>
