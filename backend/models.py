@@ -475,19 +475,7 @@ class Pagamento(db.Model):
         db.ForeignKey('alunos.id'),
         nullable=False
     )
-    valor = db.Column(db.Float, nullable=False)
-    data_vencimento = db.Column(db.Date, nullable=False)
-    data_pagamento = db.Column(db.DateTime)
-    forma_pagamento = db.Column(
-        db.Enum(
-            'dinheiro',
-            'cartao_credito',
-            'cartao_debito',
-            'pix',
-            'boleto',
-            name='forma_pagamento'
-        )
-    )
+    mes_referencia = db.Column(db.String(7), nullable=False)  # Formato: YYYY-MM
     status = db.Column(
         db.Enum(
             'pendente',
@@ -499,7 +487,7 @@ class Pagamento(db.Model):
         default='pendente',
         nullable=False
     )
-    comprovante_url = db.Column(db.String(200))
+    data_pagamento = db.Column(db.DateTime)
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(
         db.DateTime,
@@ -518,12 +506,9 @@ class Pagamento(db.Model):
         return {
             'id': self.id,
             'aluno_id': self.aluno_id,
-            'valor': self.valor,
-            'data_vencimento': self.data_vencimento.isoformat(),
-            'data_pagamento': self.data_pagamento.isoformat() if self.data_pagamento else None,
-            'forma_pagamento': self.forma_pagamento,
+            'mes_referencia': self.mes_referencia,
             'status': self.status,
-            'comprovante_url': self.comprovante_url,
+            'data_pagamento': self.data_pagamento.isoformat() if self.data_pagamento else None,
             'observacoes': self.observacoes,
             'data_criacao': self.data_criacao.isoformat(),
             'ultima_atualizacao': self.ultima_atualizacao.isoformat()

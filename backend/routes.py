@@ -553,35 +553,44 @@ def obter_aluno(aluno_id):
 @rotas.route('/api/pagamentos', methods=['GET'])
 @login_required
 def listar_pagamentos():
-    """Lista os pagamentos com filtros."""
-    aluno_id = request.args.get('aluno_id')
+    """Lista pagamentos com filtros opcionais."""
+    # Obtém parâmetros da query
+    aluno_id = request.args.get('aluno_id', type=int)
     mes_referencia = request.args.get('mes_referencia')
     status = request.args.get('status')
     
+    # Inicia a query base
     query = Pagamento.query
     
+    # Aplica filtros se fornecidos
     if aluno_id:
-        query = query.filter_by(aluno_id=aluno_id)
+        query = query.filter(Pagamento.aluno_id == aluno_id)
     if mes_referencia:
-        query = query.filter_by(mes_referencia=mes_referencia)
+        query = query.filter(Pagamento.mes_referencia == mes_referencia)
     if status:
-        query = query.filter_by(status=status)
+        query = query.filter(Pagamento.status == status)
+        
+    # Executa a query
+    pagamentos = query.all()
     
-    pagamentos = query.order_by(Pagamento.mes_referencia.desc()).all()
-    return jsonify([{
-        'id': pagamento.id,
-        'aluno': {
-            'id': pagamento.aluno.id,
-            'nome': pagamento.aluno.nome,
-            'plano': {
-                'nome': pagamento.aluno.plano.nome if pagamento.aluno.plano else 'Sem plano'
-            }
-        },
-        'mes_referencia': pagamento.mes_referencia,
-        'data_pagamento': pagamento.data_pagamento.strftime('%Y-%m-%d') if pagamento.data_pagamento else None,
-        'status': pagamento.status,
-        'observacoes': pagamento.observacoes
-    } for pagamento in pagamentos])
+    # Formata o resultado
+    resultado = []
+    for pagamento in pagamentos:
+        aluno = pagamento.aluno
+        resultado.append({
+            'id': pagamento.id,
+            'aluno': {
+                'id': aluno.id,
+                'nome': aluno.nome,
+                'plano': aluno.plano.nome if aluno.plano else None
+            },
+            'mes_referencia': pagamento.mes_referencia,
+            'status': pagamento.status,
+            'data_pagamento': pagamento.data_pagamento.strftime('%Y-%m-%d') if pagamento.data_pagamento else None,
+            'observacoes': pagamento.observacoes
+        })
+    
+    return jsonify(resultado)
 
 
 @rotas.route('/api/pagamentos', methods=['POST'])
@@ -590,37 +599,33 @@ def criar_pagamento():
     """Cria um novo registro de pagamento."""
     dados = request.get_json()
     
+    # Verifica se já existe pagamento para este aluno/mês
+    pagamento_existente = Pagamento.query.filter_by(
+        aluno_id=dados['aluno_id'],
+        mes_referencia=dados['mes_referencia']
+    ).first()
+    
+    if pagamento_existente:
+        return jsonify({
+            'erro': 'Já existe um pagamento registrado para este aluno neste mês'
+        }), 400
+    
+    # Cria o novo pagamento
+    pagamento = Pagamento(
+        aluno_id=dados['aluno_id'],
+        mes_referencia=dados['mes_referencia'],
+        status=dados['status'],
+        data_pagamento=datetime.strptime(dados['data_pagamento'], '%Y-%m-%d') if dados.get('data_pagamento') else None,
+        observacoes=dados.get('observacoes')
+    )
+    
     try:
-        # Verifica se já existe pagamento para este aluno/mês
-        pagamento_existente = Pagamento.query.filter_by(
-            aluno_id=dados['aluno_id'],
-            mes_referencia=dados['mes_referencia']
-        ).first()
-        
-        if pagamento_existente:
-            return jsonify({
-                'erro': 'Já existe um pagamento registrado para este aluno neste mês'
-            }), 400
-        
-        pagamento = Pagamento(
-            aluno_id=dados['aluno_id'],
-            mes_referencia=dados['mes_referencia'],
-            data_pagamento=datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date() if dados.get('data_pagamento') else None,
-            status=dados['status'],
-            observacoes=dados.get('observacoes', '')
-        )
-        
         db.session.add(pagamento)
         db.session.commit()
-        
-        return jsonify({
-            'mensagem': 'Pagamento registrado com sucesso',
-            'id': pagamento.id
-        }), 201
-        
+        return jsonify({'mensagem': 'Pagamento registrado com sucesso'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 400
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['PUT'])
@@ -630,31 +635,20 @@ def atualizar_pagamento(pagamento_id):
     pagamento = Pagamento.query.get_or_404(pagamento_id)
     dados = request.get_json()
     
-    try:
-        # Verifica se já existe outro pagamento para este aluno/mês
-        pagamento_existente = Pagamento.query.filter(
-            Pagamento.id != pagamento_id,
-            Pagamento.aluno_id == dados['aluno_id'],
-            Pagamento.mes_referencia == dados['mes_referencia']
-        ).first()
-        
-        if pagamento_existente:
-            return jsonify({
-                'erro': 'Já existe um pagamento registrado para este aluno neste mês'
-            }), 400
-        
-        pagamento.aluno_id = dados['aluno_id']
-        pagamento.mes_referencia = dados['mes_referencia']
-        pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%d').date() if dados.get('data_pagamento') else None
+    # Atualiza os campos
+    if 'status' in dados:
         pagamento.status = dados['status']
-        pagamento.observacoes = dados.get('observacoes', '')
-        
+    if 'data_pagamento' in dados:
+        pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%d') if dados['data_pagamento'] else None
+    if 'observacoes' in dados:
+        pagamento.observacoes = dados['observacoes']
+    
+    try:
         db.session.commit()
         return jsonify({'mensagem': 'Pagamento atualizado com sucesso'})
-        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 400
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['DELETE'])
@@ -666,11 +660,10 @@ def deletar_pagamento(pagamento_id):
     try:
         db.session.delete(pagamento)
         db.session.commit()
-        return jsonify({'mensagem': 'Registro excluído com sucesso'})
-        
+        return jsonify({'mensagem': 'Pagamento deletado com sucesso'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 400
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/pagamentos/<int:pagamento_id>', methods=['GET'])
