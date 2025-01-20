@@ -424,8 +424,12 @@ def listar_planos_disponiveis():
 @login_required
 def listar_alunos():
     """API para listar alunos."""
-    alunos = Aluno.query.all()
-    return jsonify([aluno.to_dict() for aluno in alunos])
+    try:
+        alunos = Aluno.query.all()
+        return jsonify([aluno.to_dict() for aluno in alunos])
+    except Exception as e:
+        print(f"Erro ao listar alunos: {str(e)}")  # Log do erro
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/alunos', methods=['POST'])
@@ -791,8 +795,12 @@ def obter_treino(treino_id):
 @login_required
 def listar_exercicios():
     """API para listar exercícios."""
-    exercicios = Exercicio.query.all()
-    return jsonify([exercicio.to_dict() for exercicio in exercicios])
+    try:
+        exercicios = Exercicio.query.all()
+        return jsonify([exercicio.to_dict() for exercicio in exercicios])
+    except Exception as e:
+        print(f"Erro ao listar exercícios: {str(e)}")  # Log do erro
+        return jsonify({'erro': str(e)}), 500
 
 
 @rotas.route('/api/exercicios', methods=['POST'])
