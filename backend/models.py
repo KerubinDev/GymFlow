@@ -256,6 +256,45 @@ class Plano(db.Model):
         }
 
 
+class TreinoExercicio(db.Model):
+    """Modelo para associação entre treinos e exercícios."""
+    __tablename__ = 'treino_exercicio'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    treino_id = db.Column(
+        db.Integer,
+        db.ForeignKey('treinos.id'),
+        nullable=False
+    )
+    exercicio_id = db.Column(
+        db.Integer,
+        db.ForeignKey('exercicios.id'),
+        nullable=False
+    )
+    series = db.Column(db.Integer, nullable=False)
+    repeticoes = db.Column(db.Integer, nullable=False)
+    carga = db.Column(db.Float)  # em kg
+    observacoes = db.Column(db.Text)
+    ordem = db.Column(db.Integer, nullable=False)
+    
+    # Relacionamentos
+    exercicio = db.relationship('Exercicio', backref='treinos_exercicios')
+    
+    def to_dict(self):
+        """Converte o objeto em um dicionário."""
+        return {
+            'id': self.id,
+            'treino_id': self.treino_id,
+            'exercicio_id': self.exercicio_id,
+            'series': self.series,
+            'repeticoes': self.repeticoes,
+            'carga': self.carga,
+            'observacoes': self.observacoes,
+            'ordem': self.ordem,
+            'exercicio': self.exercicio.to_dict()
+        }
+
+
 class Treino(db.Model):
     """Modelo para treinos dos alunos."""
     __tablename__ = 'treinos'
@@ -299,7 +338,7 @@ class Treino(db.Model):
     )
     
     # Relacionamentos
-    exercicios = db.relationship('Exercicio', backref='treino', lazy=True)
+    treinos_exercicios = db.relationship('TreinoExercicio', backref='treino', lazy=True)
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte o objeto para dicionário."""
@@ -312,7 +351,7 @@ class Treino(db.Model):
             'status': self.status,
             'data_criacao': self.data_criacao.isoformat(),
             'ultima_atualizacao': self.ultima_atualizacao.isoformat(),
-            'exercicios': [exercicio.to_dict() for exercicio in self.exercicios]
+            'exercicios': [te.to_dict() for te in self.treinos_exercicios]
         }
 
 

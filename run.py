@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask
 from backend import create_app, db
-from backend.models import Usuario, Aluno, Professor, Plano, Treino, Exercicio, Turma, MatriculaTurma, Pagamento
+from backend.models import Usuario, Aluno, Professor, Plano, Treino, Exercicio, Turma, MatriculaTurma, Pagamento, TreinoExercicio
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 
@@ -231,27 +231,37 @@ def criar_dados_exemplo():
             aluno_id=aluno1.id,
             professor_id=professor1.id,
             tipo='musculacao',
-            data_inicio=datetime.now().date(),
             status='ativo',
-            observacoes='Treino focado em hipertrofia',
-            exercicios=[{
-                'exercicio_id': exercicios[0].id,
-                'series': 4,
-                'repeticoes': 12,
-                'carga': 40,
-                'observacoes': 'Descanso de 1 minuto entre séries'
-            }, {
-                'exercicio_id': exercicios[1].id,
-                'series': 4,
-                'repeticoes': 10,
-                'carga': 60,
-                'observacoes': 'Fazer aquecimento'
-            }]
+            observacoes='Treino focado em hipertrofia'
         )
         
         db.session.add(treino1)
         db.session.commit()
-        print("Treinos criados com sucesso!")
+        
+        # Adicionar exercícios ao treino
+        treino_exercicio1 = TreinoExercicio(
+            treino_id=treino1.id,
+            exercicio_id=exercicios[0].id,  # Supino Reto
+            series=4,
+            repeticoes=12,
+            carga=40,
+            observacoes='Descanso de 1 minuto entre séries',
+            ordem=1
+        )
+        
+        treino_exercicio2 = TreinoExercicio(
+            treino_id=treino1.id,
+            exercicio_id=exercicios[1].id,  # Agachamento
+            series=4,
+            repeticoes=10,
+            carga=60,
+            observacoes='Fazer aquecimento',
+            ordem=2
+        )
+        
+        db.session.add_all([treino_exercicio1, treino_exercicio2])
+        db.session.commit()
+        print("Treinos e exercícios criados com sucesso!")
         
         # Criar turmas
         turma1 = Turma(
