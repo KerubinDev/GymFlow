@@ -99,12 +99,12 @@ def criar_dados_exemplo():
     """Cria dados de exemplo para o sistema."""
     print("Criando dados de exemplo...")
     
-    # Verifica se já existem dados
-    if Usuario.query.count() > 1:  # Ignora o admin padrão
-        print("Dados de exemplo já existem.")
-        return
-    
     try:
+        # Verifica se já existem dados de exemplo (usando alunos como referência)
+        if Aluno.query.count() > 0:
+            print("Dados de exemplo já existem.")
+            return
+        
         # Criar professores
         usuario_prof1 = Usuario(
             nome='João Silva',
@@ -158,7 +158,12 @@ def criar_dados_exemplo():
         
         # Criar alunos
         plano_mensal = Plano.query.filter_by(nome='Mensal').first()
+        if not plano_mensal:
+            raise Exception("Plano Mensal não encontrado. Execute criar_planos_iniciais() primeiro.")
+            
         plano_trimestral = Plano.query.filter_by(nome='Trimestral').first()
+        if not plano_trimestral:
+            raise Exception("Plano Trimestral não encontrado. Execute criar_planos_iniciais() primeiro.")
         
         aluno1 = Aluno(
             nome='Pedro Souza',
@@ -345,6 +350,11 @@ def inicializar_sistema():
     
     # Criar banco de dados e tabelas
     with app.app_context():
+        # Apaga o banco de dados se existir
+        if os.path.exists('instance/database.db'):
+            os.remove('instance/database.db')
+            print("Banco de dados antigo removido.")
+        
         db.create_all()
         print("Banco de dados inicializado.")
         
