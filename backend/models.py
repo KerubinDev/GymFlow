@@ -426,6 +426,7 @@ class Turma(db.Model):
     horario_inicio = db.Column(db.Time, nullable=False)
     horario_fim = db.Column(db.Time, nullable=False)
     capacidade_maxima = db.Column(db.Integer, nullable=False)
+    descricao = db.Column(db.Text)
     status = db.Column(
         db.Enum('ativa', 'inativa', name='status_turma'),
         default='ativa',
@@ -458,6 +459,7 @@ class Turma(db.Model):
             'horario_inicio': self.horario_inicio.strftime('%H:%M'),
             'horario_fim': self.horario_fim.strftime('%H:%M'),
             'capacidade_maxima': self.capacidade_maxima,
+            'descricao': self.descricao,
             'status': self.status,
             'data_criacao': self.data_criacao.isoformat(),
             'ultima_atualizacao': self.ultima_atualizacao.isoformat()
