@@ -1,7 +1,7 @@
 """Inicialização da aplicação Flask."""
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -11,6 +11,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
 from flask_talisman import Talisman
+from werkzeug.security import generate_password_hash
 
 # Inicializa extensões
 db = SQLAlchemy()
@@ -20,6 +21,153 @@ mail = Mail()
 jwt = JWTManager()
 cache = Cache()
 
+def criar_dados_exemplo():
+    """Cria dados de exemplo no banco de dados."""
+    from .models import Usuario, Professor, Aluno, Plano, Treino, Exercicio, Turma, Pagamento
+    
+    # Verifica se já existem dados
+    if Usuario.query.first():
+        return
+    
+    try:
+        # Criar usuário gerente
+        gerente = Usuario(
+            nome='Administrador',
+            email='admin@gymflow.com',
+            tipo='gerente',
+            status='ativo'
+        )
+        gerente.senha = 'admin123'
+        db.session.add(gerente)
+        db.session.flush()
+        
+        # Criar usuário professor
+        usuario_professor = Usuario(
+            nome='João Silva',
+            email='joao@gymflow.com',
+            tipo='professor',
+            status='ativo'
+        )
+        usuario_professor.senha = 'prof123'
+        db.session.add(usuario_professor)
+        db.session.flush()
+        
+        # Criar professor
+        professor = Professor(
+            usuario_id=usuario_professor.id,
+            especialidade='Musculação, Funcional',
+            horario_disponivel='Segunda a Sexta, 8h às 17h',
+            status='ativo'
+        )
+        db.session.add(professor)
+        db.session.flush()
+        
+        # Criar plano
+        plano = Plano(
+            nome='Plano Básico',
+            descricao='Acesso à academia e aulas em grupo',
+            valor=100.00,
+            duracao_meses=1,
+            ativo=True
+        )
+        db.session.add(plano)
+        db.session.flush()
+        
+        # Criar aluno
+        aluno = Aluno(
+            nome='Maria Santos',
+            email='maria@email.com',
+            cpf='123.456.789-00',
+            telefone='(11) 98765-4321',
+            data_nascimento=datetime(1990, 1, 1).date(),
+            endereco='Rua Exemplo, 123',
+            altura=1.65,
+            peso=65.0,
+            objetivo='hipertrofia',
+            plano_id=plano.id,
+            status='ativo'
+        )
+        db.session.add(aluno)
+        db.session.flush()
+        
+        # Criar exercícios
+        exercicios = [
+            Exercicio(
+                nome='Supino Reto',
+                descricao='Exercício para peitoral',
+                grupo_muscular='Peitoral',
+                equipamento='Barra e banco',
+                nivel='intermediario'
+            ),
+            Exercicio(
+                nome='Agachamento',
+                descricao='Exercício para pernas',
+                grupo_muscular='Quadríceps',
+                equipamento='Barra',
+                nivel='intermediario'
+            ),
+            Exercicio(
+                nome='Puxada Alta',
+                descricao='Exercício para costas',
+                grupo_muscular='Dorsal',
+                equipamento='Puxador',
+                nivel='iniciante'
+            )
+        ]
+        for exercicio in exercicios:
+            db.session.add(exercicio)
+        db.session.flush()
+        
+        # Criar treino
+        treino = Treino(
+            aluno_id=aluno.id,
+            professor_id=professor.id,
+            tipo='musculacao',
+            data_inicio=datetime.now().date(),
+            status='ativo',
+            observacoes='Treino inicial',
+            exercicios=[{
+                'exercicio_id': exercicios[0].id,
+                'series': '3',
+                'repeticoes': '12',
+                'carga': '20',
+                'observacoes': 'Manter forma correta'
+            }]
+        )
+        db.session.add(treino)
+        db.session.flush()
+        
+        # Criar turma
+        turma = Turma(
+            modalidade='Musculação',
+            professor_id=professor.id,
+            dia_semana='Segunda',
+            horario_inicio='08:00',
+            horario_fim='09:00',
+            capacidade_maxima=15,
+            nivel='iniciante',
+            descricao='Aula de musculação para iniciantes'
+        )
+        db.session.add(turma)
+        db.session.flush()
+        
+        # Criar pagamento
+        pagamento = Pagamento(
+            aluno_id=aluno.id,
+            mes_referencia=datetime.now().strftime('%Y-%m'),
+            status='pago',
+            data_pagamento=datetime.now(),
+            observacoes='Pagamento do plano básico'
+        )
+        db.session.add(pagamento)
+        
+        # Commit das alterações
+        db.session.commit()
+        print("Dados de exemplo criados com sucesso!")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao criar dados de exemplo: {str(e)}")
 
 def create_app(config_name=None):
     """
@@ -95,16 +243,7 @@ def create_app(config_name=None):
         from .models import init_db
         init_db()
         
-        # Cria um usuário gerente padrão se não existir
-        if not Usuario.query.filter_by(email='admin@gymflow.com').first():
-            gerente = Usuario(
-                nome='Administrador',
-                email='admin@gymflow.com',
-                tipo='gerente',
-                status='ativo'
-            )
-            gerente.senha = 'admin123'  # Será hasheada automaticamente
-            db.session.add(gerente)
-            db.session.commit()
+        # Cria dados de exemplo
+        criar_dados_exemplo()
     
     return app 
