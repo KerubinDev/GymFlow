@@ -43,7 +43,7 @@ Sistema completo para gestão de academias desenvolvido em Python/Flask, oferece
 - Chart.js (Gráficos)
 - SQLite (Banco de Dados)
 
-## Instalação
+## Instalação local
 
 1. Clone o repositório:
 ```bash
@@ -73,6 +73,13 @@ cp .env.example .env
 ```bash
 flask db upgrade
 python run.py
+```
+
+## Instalação codespace
+
+1. rode o programa
+```bash
+python tun.py
 ```
 
 ## Uso
